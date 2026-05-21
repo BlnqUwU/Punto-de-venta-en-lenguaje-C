@@ -1,2 +1,2 @@
-Interfaz: Interfaz.c sesion.c sesion.h
-	gcc Interfaz.c sesion.c sesion.h -o Interfaz -lncurses
+cliente: cliente.c funciones_cliente.c cliente.h
+	gcc cliente.c funciones_cliente.c cliente.h -o cliente -lncurses
