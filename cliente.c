@@ -3,19 +3,108 @@
 #include "cliente.h"
 
 
-void Catalogo(usuario u){
+void Catalogo(char *usuario){
     return;
 }
 
-void Carrito(usuario u){
+void Carrito(char *usuario){
     return;
 }
 
-void Perfil(usuario u){
+void Perfil(char *usr){
+        int opcion = 0;
+    int tecla;
+    char *menu[] = {
+        "Nombre:",
+        "Apellido:",
+        "Usuario:",
+        "Correo:",
+        "Password:",
+        "Regresar"
+    };
+
+    int n = sizeof(menu)/sizeof(menu[0]);
+
+    usuario login = SolicitarPerfil(usr);
+    char *DatosUsuario[]={
+        login.nombre,
+        login.apellido,
+        login.correo,
+        login.usr,
+        login.pass
+    };
+
+    int l = sizeof(DatosUsuario)/sizeof(DatosUsuario[0]);
+
+    //initscr();
+    set_escdelay(0);
+    noecho();
+    curs_set(0);
+    keypad(stdscr, TRUE); 
+
+    while(1) {
+        curs_set(0);
+        clear();
+        
+        mvprintw((LINES/2)-3, ((COLS-strlen("Editar perfil"))/2), "Editar perfil");
+        ImprimirCentrado((LINES/2)-2, "Selecciona una opcion");
+        
+        for(int i = 0; i < n; i++) {
+            if(i == opcion)
+                attron(A_REVERSE); 
+            if(i>4)
+                ImprimirCentrado((LINES/2)+ i, menu[i]);
+            else
+                mvprintw((LINES/2)+ i, (COLS/2) -25, "%s", menu[i]);
+            attroff(A_REVERSE);
+        }
+
+        refresh();
+
+        for(int i = 0; i < l; i++) {
+            mvprintw((LINES/2)+ i, ((COLS/2)+strlen(menu[i])) -25, "%s", DatosUsuario[i]);
+        }
+        refresh();
+
+        tecla = getch();
+
+        switch(tecla) {
+            case KEY_UP:
+                opcion--;
+                if(opcion < 0) opcion = n - 1;
+                break;
+
+            case KEY_DOWN:
+                opcion++;
+                if(opcion >= n) opcion = 0;
+                break;
+
+            case 10: // ENTER
+
+                switch (opcion) {
+                    //CREAR MODIFICARATRIBUTO()
+                    case 0:
+                        break;
+                    case 1:
+                        break;
+                    case 2:
+                        break;
+                    case 3:
+                        break;
+                    case 4:
+                        break;
+                    case 5:
+                        return;
+                }
+                break;
+            case 27:
+            return;
+        }
+    }
     return;
 }
 
-void MenuPrincipal(usuario u){
+void MenuPrincipal(char *usuario){
     int opcion = 0;
     int tecla;
     char *menu[] = {
@@ -37,7 +126,7 @@ void MenuPrincipal(usuario u){
         curs_set(0);
         clear();
         
-        mvprintw((LINES/2)-3, ((COLS-strlen("!Bienvenido ")-strlen(u.usr))/2), "!Bienvenido %s!", u.usr);
+        mvprintw((LINES/2)-3, ((COLS-strlen("!Bienvenido ")-strlen(usuario))/2), "!Bienvenido %s!", usuario);
         ImprimirCentrado((LINES/2)-2, "Selecciona una opcion");
         //mvprintw(3, 10, "Selecciona una opcion:");
         ImprimirCentrado(2, "");
@@ -68,13 +157,13 @@ void MenuPrincipal(usuario u){
 
                 switch (opcion) {
                     case 0:
-                        Catalogo(u);
+                        Catalogo(usuario);
                         break;
                     case 1:
-                        Carrito(u);
+                        Carrito(usuario);
                         break;
                     case 2:
-                        Perfil(u);
+                        Perfil(usuario);
                         break;
                     case 3:
                         return;
@@ -100,6 +189,9 @@ void registrar() {
     int opcion = 0;
     int tecla;
     int col= 0;
+    int cor=0;
+    int us=0;
+    char aux0[50],aux1[50];
     char *menu[] = {
         "Nombre:",
         "Apellido:",
@@ -109,12 +201,22 @@ void registrar() {
         "Registrar",
         "Regresar "
     };
+    
+    int n = sizeof(menu)/sizeof(menu[0]);
+    
+    char *DatosUsuario[]={
+        user.nombre,
+        user.apellido,
+        user.correo,
+        user.usr,
+        user.pass
+    };
 
-    int n = 7;
+    int l = sizeof(DatosUsuario)/sizeof(DatosUsuario[0]);
     
     while(1) {
-        //curs_set(0);
-        //clear();
+        curs_set(0);
+        clear();
 
         ImprimirCentrado((LINES/2) -3, "Registrar un usuario");
         //mvprintw(3, 10, "Registrar un usuario");
@@ -129,6 +231,39 @@ void registrar() {
 
             attroff(A_REVERSE);
         }
+
+        refresh();
+
+        for(int i = 0; i < l; i++) {
+            mvprintw((LINES/2)+ i, ((COLS/2)+strlen(menu[i])) -25, "%s", DatosUsuario[i]);
+        }
+
+        move((LINES/2)+11, 0);
+        clrtoeol();
+        if(cor==1){
+            
+            ImprimirCentrado((LINES/2)+11, "Correo Invalido");
+        }
+        else if (cor==2){
+            mvprintw((LINES/2)+11, (((COLS-strlen("El correo  ya esta en uso")-strlen(aux0))/2)), "El Correo %s ya esta en uso", aux0);
+        }
+            
+        col= (COLS - strlen(aux1)-strlen("El usuario  ya existe")) / 2;
+        if(col<0)
+            col=0;
+        if(us==1){  
+            if(cor!=0){
+                move((LINES/2)+12, 0);
+                clrtoeol();
+                mvprintw((LINES/2)+12, col, "El usuario %s ya existe", aux1);  
+            } else{
+                move((LINES/2)+11,col);
+                clrtoeol(); 
+                mvprintw((LINES/2)+11, col, "El usuario %s ya existe", aux1);  
+            }
+            
+        }
+            
 
         refresh();
 
@@ -163,6 +298,7 @@ void registrar() {
                     noecho();
                     break;
                     case 2:
+                    cor=0;
                     move((LINES/2)+2,8+(COLS/2)-26);
                     clrtoeol(); 
                     echo();
@@ -172,8 +308,9 @@ void registrar() {
                         move((LINES/2)+11, 0);
                         clrtoeol();
                         move((LINES/2)+12, 0);
+                        strcpy(user.correo, "");
                         clrtoeol();
-                        ImprimirCentrado((LINES/2)+11, "Correo Invalido");
+                        cor=1;
                         //mvprintw(15, 10, "Correo Invalido");
                     }else if (BuscarCorreo(user.correo) == 1) {
                         move((LINES/2)+11, 0);
@@ -182,7 +319,8 @@ void registrar() {
                         clrtoeol();
                         move((LINES/2)+7,8+49);
                         clrtoeol();
-                        mvprintw((LINES/2)+11, ((COLS-strlen("El correo  ya esta en uso")-strlen(user.correo))/2), "El Correo %s ya esta en uso", user.correo);
+                        cor=2;
+                        strcpy(aux0, user.correo);
                         strcpy(user.correo, "");
                     }else {
                         move((LINES/2)+11, 0);
@@ -192,6 +330,7 @@ void registrar() {
                     }
                     break;
                     case 3:
+                    us=0;
                     echo();
                     move((LINES/2)+3,9+(COLS/2)-26);
                     clrtoeol(); 
@@ -204,10 +343,8 @@ void registrar() {
                         clrtoeol();
                         move((LINES/2)+8,9+49);
                         clrtoeol();
-                        col= (COLS - strlen(user.usr)) / 2;
-                        if(col<0)
-                            col=0;
-                        mvprintw((LINES/2)+11, col, "El usuario %s ya existe", user.usr);
+                        us=1;
+                        strcpy(aux1, user.usr);
                         strcpy(user.usr, "");
                     }else {
                         move((LINES/2)+11, 0);
@@ -295,7 +432,7 @@ void iniciarSesion() {
     keypad(stdscr, TRUE);
 
     int errorCount = 0;
-    usuario user;
+    usuario user = {"","","","",""};
 
     char pass[50], hash_pass[50];
 
@@ -311,10 +448,18 @@ void iniciarSesion() {
         "Regresar"
     };
 
-    int n = 4;
+    int n = sizeof(menu)/sizeof(menu[0]);
+    
+    char *DatosUsuario[]={
+        user.usr,
+        user.pass
+    };
+
+    int l = sizeof(DatosUsuario)/sizeof(DatosUsuario[0]);
     
     while(errorCount != 3) {
-        
+        curs_set(0);
+        clear();
         ImprimirCentrado((LINES/2) -3, "Iniciar Sesion");
         //mvprintw(3, 10, "Iniciar Sesion");
 
@@ -327,7 +472,15 @@ void iniciarSesion() {
                 mvprintw((LINES/2) + i, (COLS/2) -25, "%s", menu[i]);
             attroff(A_REVERSE);
         }
+        refresh();
 
+        for(int i = 0; i < l; i++) {
+            mvprintw((LINES/2)+i, ((COLS/2)+strlen(menu[i])) -25, "%s", DatosUsuario[i]);
+        }
+
+        if(errorCount>0)
+            ImprimirCentrado((LINES/2) +11, "Usuario y/o password incorrectos.");
+        
         refresh();
 
         tecla = getch();
@@ -366,26 +519,28 @@ void iniciarSesion() {
 
                     if(SolicitarSesion(user) == 1) {
                         clear();
-                        MenuPrincipal(user);
+                        MenuPrincipal(user.usr);
                         return;
+                    }else{
+                        //mvprintw(10, 10, "Datos incorrectos.");
+                        strcpy(user.usr, "");
+                        move((LINES/2),9+(COLS/2) -26);
+                        clrtoeol();
+                        strcpy(user.pass, "");
+                        move((LINES/2) +1,10+(COLS/2) -26);
+                        clrtoeol(); 
+                        errorCount++;
+                        clear();
                     }
-                    
-                    ImprimirCentrado((LINES/2) +11, "Usuario y/o password incorrectos.");
-                    //mvprintw(10, 10, "Datos incorrectos.");
-                    strcpy(user.usr, "");
-                    move(5,9+(COLS/2) -26);
-                    clrtoeol();
-                    strcpy(user.pass, "");
-                    move(6,10+(COLS/2) -26);
-                    clrtoeol(); 
-                    errorCount++;
-                    if(errorCount == 3) {
+                    if(errorCount == 3 && errorCount >0) {
                         clear();
                         ImprimirCentrado((LINES/2), "3 intentos fallidos.");
                         //mvprintw(3, 10, "3 Intentos Fallidos");
                         getch();
                         endwin();
                         return;
+                    }else{
+                        ImprimirCentrado((LINES/2) +11, "Usuario y/o password incorrectos.");
                     }
                     break;
                     case 3:
@@ -424,11 +579,6 @@ void menu() {
     if (has_colors()) {
         start_color();
         init_pair(1, COLOR_BLACK, COLOR_CYAN);
-        init_pair(2, COLOR_BLACK, COLOR_WHITE);
-        init_pair(3, COLOR_WHITE, COLOR_GREEN);
-        init_pair(4, COLOR_WHITE, COLOR_RED);
-        init_pair(5, COLOR_YELLOW, COLOR_BLACK);
-        init_pair(6, COLOR_CYAN, COLOR_BLACK);
     }
     
     bkgd(COLOR_PAIR(1));

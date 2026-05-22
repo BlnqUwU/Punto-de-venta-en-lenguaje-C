@@ -158,7 +158,7 @@ int SolicitarSesion(usuario u){
                nombre, apellido, correo, usr, pass);
 
         if(strcmp(usr, u.usr) == 0 &&
-           strcmp(pass, u.pass) == 0) {
+            strcmp(pass, u.pass) == 0) {
 
             fclose(archivo);
             return 1; // login correcto
@@ -167,6 +167,27 @@ int SolicitarSesion(usuario u){
 
     fclose(archivo);
     return 0; // login incorrecto
+}
+
+usuario SolicitarPerfil(char *usr){
+    char linea[200];
+    usuario user = {"No usuario","si encuentras esto","felicidades","rompiste a alguien que siempre sonreia.",""};
+    FILE *archivo = fopen("usuarios.txt", "r");
+
+    if (archivo == NULL) 
+        return user;
+
+    while (fgets(linea, sizeof(linea), archivo)) {
+
+        sscanf(linea, "%[^,],%[^,],%[^,],%[^,],%[^,\n]",
+               user.nombre, user.apellido, user.correo, user.usr, user.pass);
+        if(strcmp(user.nombre, usr) == 0){
+            fclose(archivo);
+            return user; // login correcto
+        }
+        
+    }
+    return user;
 }
 
 void hash(char *input, char *output) {
