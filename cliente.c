@@ -26,7 +26,7 @@ void MenuPrincipal(usuario u){
         "Cerrar sesion"
     };
 
-    int n = 4;
+    int n = sizeof(menu)/sizeof(menu[0]);
 
     initscr();
     set_escdelay(0);
@@ -38,7 +38,7 @@ void MenuPrincipal(usuario u){
         curs_set(0);
         clear();
 
-        mvprintw(4, 10, "!Bienvenido %s!", u.usr);
+        mvprintw(2, 10, "!Bienvenido %s!", u.usr);
         mvprintw(3, 10, "Selecciona una opcion:");
 
         for(int i = 0; i < n; i++) {
