@@ -6,13 +6,13 @@ Punto de venta creado en lenguaje C utilizando procesos y las herramientas del I
 
 ## Instalación
 
-    >[!NOTA]
-    >Este repositorio necesita dependencias, antes de instalar instala:
-    >-  ncurses
-    >Arch Linux
-    >sudo pacman -S ncurses
-    >Ubuntu/Debian
-    >sudo apt install libncurses-dev
+    > [!NOTE]
+    > Este repositorio necesita dependencias, antes de instalar instala:
+    > -  ncurses
+    > Arch Linux
+    > sudo pacman -S ncurses
+    > Ubuntu/Debian
+    > sudo apt install libncurses-dev
 
     Ejecuta
 -   git clone https://github.com/BlnqUwU/Punto-de-venta-en-lenguaje-C
@@ -20,7 +20,7 @@ Punto de venta creado en lenguaje C utilizando procesos y las herramientas del I
 
 ## Changelog
 
-### V0.2.0
+### V0.2.2
 
 -   Menú mejor distribuido.
 -   Color de terminal de predeterminardo a cyan.
