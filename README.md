@@ -13,7 +13,9 @@ Punto de venta creado en lenguaje C utilizando procesos y las herramientas del I
 
 Ejecuta
 -   git clone https://github.com/BlnqUwU/Punto-de-venta-en-lenguaje-C
+-   cd Punto-de-venta-en-lenguaje-C/
 -   make cliente
+-   ./cliente
 
 ## Changelog
 
