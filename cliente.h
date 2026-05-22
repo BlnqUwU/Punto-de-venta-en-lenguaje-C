@@ -24,3 +24,4 @@ void MenuPrincipal(usuario u);
 void Catalogo(usuario u);
 void Carrito(usuario u);
 void Perfil(usuario u);
+void ImprimirCentrado(int fila, const char *texto);

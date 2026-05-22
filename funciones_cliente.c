@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include <ncurses.h>
 #include "cliente.h"
 
 int VerificarCorreo(char *correo){
@@ -177,4 +178,10 @@ void hash(char *input, char *output) {
     }
 
     sprintf(output, "%lu", h);
+}
+
+void ImprimirCentrado(int fila, const char *texto) {
+    int col = (COLS - strlen(texto)) / 2;
+    if (col < 0) col = 0;
+    mvprintw(fila, col, "%s", texto);
 }
