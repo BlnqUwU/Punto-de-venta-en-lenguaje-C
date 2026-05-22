@@ -6,7 +6,7 @@ Punto de venta creado en lenguaje C utilizando procesos y las herramientas del I
 
 ## Instalación
 
-> [!NOTE]
+> [!NOTA]
 > Este repositorio necesita dependencias, antes de instalar instala:
 > -  ncurses
 > Arch Linux
