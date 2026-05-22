@@ -126,7 +126,10 @@ int RegistrarUsuario(usuario u){
     FILE *archivo = fopen("usuarios.txt", "a");
         if (archivo != NULL) {
             fprintf(archivo, "%s,", u.nombre);
-            fprintf(archivo, "%s,", u.apellido);
+                if(strcmp(u.apellido, "")==0)
+                    fprintf(archivo, " ,");
+                else
+                    fprintf(archivo, "%s,", u.apellido);
             fprintf(archivo, "%s,", u.correo);
             fprintf(archivo, "%s,", u.usr);
             fprintf(archivo, "%s,", u.pass);

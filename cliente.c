@@ -2,8 +2,87 @@
 #include <string.h>
 #include "cliente.h"
 
-void menu_principal(){
-    
+
+void Catalogo(usuario u){
+    return;
+}
+
+void Carrito(usuario u){
+    return;
+}
+
+void Perfil(usuario u){
+    return;
+}
+
+void MenuPrincipal(usuario u){
+    int opcion = 0;
+    int tecla;
+
+    char *menu[] = {
+        "Ver catalogo",
+        "Ver carrito de compra",
+        "Ver perfil",
+        "Cerrar sesion"
+    };
+
+    int n = 4;
+
+    initscr();
+    set_escdelay(0);
+    noecho();
+    curs_set(0);
+    keypad(stdscr, TRUE); 
+
+    while(1) {
+        curs_set(0);
+        clear();
+
+        mvprintw(4, 10, "!Bienvenido %s!", u.usr);
+        mvprintw(3, 10, "Selecciona una opcion:");
+
+        for(int i = 0; i < n; i++) {
+            if(i == opcion)
+                attron(A_REVERSE); 
+            mvprintw(5 + i, 10, "%s", menu[i]);
+            attroff(A_REVERSE);
+        }
+
+        refresh();
+
+        tecla = getch();
+
+        switch(tecla) {
+            case KEY_UP:
+                opcion--;
+                if(opcion < 0) opcion = n - 1;
+                break;
+
+            case KEY_DOWN:
+                opcion++;
+                if(opcion >= n) opcion = 0;
+                break;
+
+            case 10: // ENTER
+
+                switch (opcion) {
+                    case 0:
+                        Catalogo(u);
+                        break;
+                    case 1:
+                        Carrito(u);
+                        break;
+                    case 2:
+                        Perfil(u);
+                        break;
+                    case 3:
+                        return;
+                }
+                break;
+            case 27:
+            return;
+        }
+    }
 }
 
 
@@ -263,8 +342,7 @@ void iniciarSesion() {
 
                     if(SolicitarSesion(user) == 1) {
                         clear();
-                        mvprintw(3, 10, "Bienvenido.");
-                        getch();
+                        MenuPrincipal(user);
                         return;
                     }
                     mvprintw(10, 10, "Datos incorrectos.");
@@ -285,10 +363,13 @@ void iniciarSesion() {
                     break;
                     case 3:
                     return;
+                
                 }
-                curs_set(0);
+               curs_set(0); 
                 break;
             case 27:
+            curs_set(0); 
+            noecho();
             return;
         }
     }
@@ -355,6 +436,7 @@ void menu() {
                     endwin();
                     return;
                 }
+                break;
             case 27:
             return;
         }

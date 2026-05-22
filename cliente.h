@@ -20,3 +20,7 @@ void hash(char *input, char *output);
 void registrar();
 void iniciarSesion();
 void menu();
+void MenuPrincipal(usuario u);
+void Catalogo(usuario u);
+void Carrito(usuario u);
+void Perfil(usuario u);
