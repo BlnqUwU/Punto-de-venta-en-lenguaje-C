@@ -20,17 +20,20 @@ void Perfil(char *usr){
         "Usuario:",
         "Correo:",
         "Password:",
+        "Aceptar cambios",
         "Regresar"
     };
 
     int n = sizeof(menu)/sizeof(menu[0]);
 
     usuario login = SolicitarPerfil(usr);
+    char userOriginal[100];
+
     char *DatosUsuario[]={
         login.nombre,
         login.apellido,
-        login.correo,
         login.usr,
+        login.correo,
         login.pass
     };
 
@@ -80,20 +83,62 @@ void Perfil(char *usr){
                 break;
 
             case 10: // ENTER
-
+                curs_set(1);
                 switch (opcion) {
-                    //CREAR MODIFICARATRIBUTO()
                     case 0:
+                        move((LINES/2)+opcion,8+(COLS/2)-26);
+                        clrtoeol(); 
+                        echo();
+                        getstr (login.nombre);
+                        noecho();
                         break;
                     case 1:
+                        move((LINES/2)+opcion,10+(COLS/2)-26);
+                        clrtoeol(); 
+                        echo();
+                        getstr (login.apellido);
+                        noecho();
                         break;
                     case 2:
+                        move((LINES/2)+opcion,9+(COLS/2)-26);
+                        clrtoeol(); 
+                        echo();
+                        strcpy(userOriginal, login.usr);
+                        getstr (login.usr);
+                        noecho();
                         break;
                     case 3:
+                        move((LINES/2)+opcion,8+(COLS/2)-26);
+                        clrtoeol(); 
+                        echo();
+                        getstr (login.correo);
+                        noecho();
                         break;
                     case 4:
+                        move((LINES/2)+opcion,10+(COLS/2)-26);
+                        clrtoeol(); 
+                        echo();
+                        getstr (login.pass);
+                        noecho();
                         break;
                     case 5:
+
+                        curs_set(0);
+                        clear();
+                        mvprintw((LINES/2)+ 15, ((COLS/2)) -25, "%s", login.nombre);
+                        if(ModificarAtributo(login, usr)){
+                            ImprimirCentrado(LINES/2, "Cambios Guardados con exito.");
+                            getch();
+                            clear();
+                            return;
+                        }else{
+                            ImprimirCentrado(LINES/2, "Error al guardar los cambios.");
+                            getch();
+                            clear();
+                            return;
+                        }
+                        break;
+                    case 6:
                         return;
                 }
                 break;
@@ -396,7 +441,7 @@ void registrar() {
                             
                             break;
                         }else{
-                            if (RegistrarUsuario(user) == 1) {
+                            if (RegistrarUsuario(user,"usuarios.txt") == 1) {
                                 mvprintw(3, 10, "Registro Exitoso");
                                 getch();
                                 clear();
@@ -580,7 +625,7 @@ void menu() {
         start_color();
         init_pair(1, COLOR_BLACK, COLOR_CYAN);
     }
-    
+
     bkgd(COLOR_PAIR(1));
 
     while(1) {

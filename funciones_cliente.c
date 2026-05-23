@@ -123,8 +123,8 @@ int ComprobarPassword(char *pass){
 }
 
 //rescribe los datos ingresados del usuario en un archivo de texto
-int RegistrarUsuario(usuario u){
-    FILE *archivo = fopen("usuarios.txt", "a");
+int RegistrarUsuario(usuario u, char *arch){
+    FILE *archivo = fopen(arch, "a");
         if (archivo != NULL) {
             fprintf(archivo, "%s,", u.nombre);
                 if(strcmp(u.apellido, "")==0)
@@ -181,13 +181,37 @@ usuario SolicitarPerfil(char *usr){
 
         sscanf(linea, "%[^,],%[^,],%[^,],%[^,],%[^,\n]",
                user.nombre, user.apellido, user.correo, user.usr, user.pass);
-        if(strcmp(user.nombre, usr) == 0){
+        if(strcmp(user.usr, usr) == 0){
             fclose(archivo);
             return user; // login correcto
         }
-        
     }
     return user;
+}
+
+int ModificarAtributo(usuario u, char *usr){
+    char linea[200];
+    FILE *archivo = fopen("usuarios.txt", "r");
+    usuario user = {"","","","",""};
+
+    if (archivo == NULL) return 0;
+
+    while (fgets(linea, sizeof(linea), archivo)) {
+
+        sscanf(linea, "%[^,],%[^,],%[^,],%[^,],%[^,\n]",
+               user.nombre, user.apellido, user.correo, user.usr, user.pass);
+        if(strcmp(user.usr, usr) == 0){
+            //fclose(archivo);
+            RegistrarUsuario(u, "temp.txt");
+        }else{
+            RegistrarUsuario(user, "temp.txt");
+        }
+        
+    }
+     fclose(archivo);
+        remove("usuarios.txt");
+        rename("temp.txt", "usuarios.txt");
+        return 1;   
 }
 
 void hash(char *input, char *output) {
