@@ -1,4 +1,5 @@
 #include <ncurses.h>
+#include <stdlib.h>
 #include <string.h>
 #include "cliente.h"
 
@@ -11,9 +12,11 @@ void Carrito(char *usuario){
     return;
 }
 
-void Perfil(char *usr){
-        int opcion = 0;
+int Perfil(char *usr){
+    int opcion = 0;
     int tecla;
+    int ver[5]={0,0,0,0,0};
+    int ne = sizeof(ver)/sizeof(ver[0]);
     char *menu[] = {
         "Nombre:",
         "Apellido:",
@@ -27,7 +30,7 @@ void Perfil(char *usr){
     int n = sizeof(menu)/sizeof(menu[0]);
 
     usuario login = SolicitarPerfil(usr);
-    char userOriginal[100];
+    char aux[100];
 
     char *DatosUsuario[]={
         login.nombre,
@@ -68,6 +71,32 @@ void Perfil(char *usr){
             mvprintw((LINES/2)+ i, ((COLS/2)+strlen(menu[i])) -25, "%s", DatosUsuario[i]);
         }
         refresh();
+        
+        
+        for(int i=0;i<5;i++){
+            move((LINES/2)+11+i, 0);
+            clrtoeol();
+        }
+        const char* mensajes[] = {
+        "Nombre invalido, intente de nuevo.",
+        "Apellido invalido, intente de nuevo.",
+        "Nombre de usuario invalido, intente de nuevo.",
+        "Correo invalido, intente de nuevo.",
+        "Password invalida, intente de nuevo."
+        };
+
+        int pos = 0;
+
+        for (int i = 0; i < ne; i++) {
+            if (ver[i] == 1) {
+                move((LINES / 2) + 11 + pos, 0);
+                clrtoeol();
+                ImprimirCentrado((LINES / 2) + 11 + pos, mensajes[i]);
+                pos++; 
+            }
+        }
+
+        refresh();
 
         tecla = getch();
 
@@ -86,67 +115,101 @@ void Perfil(char *usr){
                 curs_set(1);
                 switch (opcion) {
                     case 0:
+                        ver[opcion]=0;
                         move((LINES/2)+opcion,8+(COLS/2)-26);
                         clrtoeol(); 
                         echo();
-                        getstr (login.nombre);
+                        getstr (aux);
+                        if(strcmp(aux,"") && strcmp(aux, " "))
+                            strcpy(login.nombre, aux);
+                        else{
+                            ver[opcion]=1;
+                        }
+
                         noecho();
                         break;
                     case 1:
                         move((LINES/2)+opcion,10+(COLS/2)-26);
                         clrtoeol(); 
                         echo();
-                        getstr (login.apellido);
+                        getstr (aux);
+                        if(strcmp(aux,"") && strcmp(aux, " ")){
+                            ver[opcion]=0;
+                            strcpy(login.apellido, aux);
+                        }
+                        else{
+                            ver[opcion]=1;
+                        }
                         noecho();
                         break;
                     case 2:
+                        
                         move((LINES/2)+opcion,9+(COLS/2)-26);
                         clrtoeol(); 
                         echo();
-                        strcpy(userOriginal, login.usr);
-                        getstr (login.usr);
+                        getstr (aux);
+                        if(strcmp(aux,"") && strcmp(aux, " ")){
+                            ver[opcion]=0;
+                            strcpy(login.usr, aux);
+                        }
+                        else{
+                            ver[opcion]=1;
+                        }
                         noecho();
                         break;
                     case 3:
+                        
                         move((LINES/2)+opcion,8+(COLS/2)-26);
                         clrtoeol(); 
                         echo();
-                        getstr (login.correo);
+                        getstr (aux);
+                        if(strcmp(aux,"") && strcmp(aux, " ") && VerificarCorreo(aux)==1){
+                            ver[opcion]=0;
+                            strcpy(login.correo, aux);
+                        }else{
+                            ver[opcion]=1;
+                        }
                         noecho();
                         break;
                     case 4:
+                        ver[opcion]=0;
                         move((LINES/2)+opcion,10+(COLS/2)-26);
                         clrtoeol(); 
                         echo();
-                        getstr (login.pass);
+                        //getstr (login.pass);
+                        getstr (aux);
+                        if(strcmp(aux,"") && strcmp(aux, " ") && ComprobarPassword(aux)<5)
+                            strcpy(login.pass, aux);
+                        else{
+                            ver[opcion]=1;
+                        }
                         noecho();
                         break;
                     case 5:
 
                         curs_set(0);
                         clear();
-                        mvprintw((LINES/2)+ 15, ((COLS/2)) -25, "%s", login.nombre);
                         if(ModificarAtributo(login, usr)){
-                            ImprimirCentrado(LINES/2, "Cambios Guardados con exito.");
+                            ImprimirCentrado(LINES/2, "Cambios Guardados con exito, vuelve a iniciar sesion.");
                             getch();
                             clear();
-                            return;
+                            return 1;
                         }else{
                             ImprimirCentrado(LINES/2, "Error al guardar los cambios.");
                             getch();
                             clear();
-                            return;
+                            return 0;
                         }
                         break;
                     case 6:
-                        return;
+                        return 0;
                 }
                 break;
             case 27:
-            return;
+            return 0;
         }
     }
-    return;
+    return 0;
 }
 
 void MenuPrincipal(char *usuario){
@@ -160,7 +223,7 @@ void MenuPrincipal(char *usuario){
     };
 
     int n = sizeof(menu)/sizeof(menu[0]);
-
+    
     //initscr();
     set_escdelay(0);
     noecho();
@@ -208,8 +271,10 @@ void MenuPrincipal(char *usuario){
                         Carrito(usuario);
                         break;
                     case 2:
-                        Perfil(usuario);
-                        break;
+                        if (Perfil(usuario)==1)
+                            return;
+                        else
+                            break;
                     case 3:
                         return;
                 }
@@ -268,7 +333,7 @@ void registrar() {
 
         for(int i = 0; i < n; i++) {
             if(i == opcion)
-                attron(A_REVERSE);
+                attron(A_REVERSE);//arreglar para no imprimir la contrasena
             if(i>=5) 
                 ImprimirCentrado((LINES/2)+i, menu[i]);
             else

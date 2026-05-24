@@ -19,6 +19,11 @@ Ejecuta
 
 ## Changelog
 
+### V0.2.3
+-   Ventana de cambio de perfil agregada
+-   Fix bugs
+-   Herobrine removed
+
 ### V0.2.2
 
 -   Menú mejor distribuido.
