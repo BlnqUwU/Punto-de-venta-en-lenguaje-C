@@ -127,11 +127,14 @@ int ComprobarPassword(char *pass){
 int RegistrarUsuario(usuario u, char *arch){
     FILE *archivo = fopen(arch, "a");
         if (archivo != NULL) {
-            fprintf(archivo, "%s,", u.nombre);
-                if(strcmp(u.apellido, "")==0)
-                    fprintf(archivo, " ,");
-                else
-                    fprintf(archivo, "%s,", u.apellido);
+            if(strcmp(u.nombre, "")==0)
+                fprintf(archivo, " ,");
+            else
+                fprintf(archivo, "%s,", u.nombre);
+            if(strcmp(u.apellido, "")==0)
+                fprintf(archivo, " ,");
+            else
+                fprintf(archivo, "%s,", u.apellido);
             fprintf(archivo, "%s,", u.correo);
             fprintf(archivo, "%s,", u.usr);
             fprintf(archivo, "%s,", u.pass);

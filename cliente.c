@@ -57,7 +57,8 @@ void Carrito(char *usuario){
             pos = 0;
         }
 
-        if(!empty(carrito)){
+        if(!empty(carrito)){ //verifica si el carrito esta vacio
+            //imprime el carrito
         for (int i = pos; i < n && (i - pos) < 30; i++) {
             info ac = get(i, carrito);
             int fila = (LINES / 2) - (30 / 2) + (i - pos);
@@ -76,17 +77,18 @@ void Carrito(char *usuario){
             
             attroff(A_REVERSE);
         }
-        
+        //calcula el total a pagar del carrito
         for(int i=0; i<carrito->NE; i++){
             auxtotal=get(i,carrito);
             totalpagar+=auxtotal.precio*auxtotal.cantidad;
         }
-
+        
         sprintf(total, "%.3f", totalpagar);
         }
+        //imprime el total a pagar del carrito
         mvprintw(41, 25 -strlen("Total a pagar: $")- strlen(total) / 2, "TOTAL A PAGAR: $%.3f", totalpagar);
         refresh();
-        
+        //imprime las opciones disponibles en menu
         for (int i = 0; i < m; i++) {
             if(i+n==opcion)
                 attron(A_REVERSE); 
@@ -114,16 +116,18 @@ void Carrito(char *usuario){
                 break;
 
             case 10: // ENTER
-                if(opcion==n+1){
+                if(opcion==n+1){ //salir seleccionado
                     liberarlista(&carrito);
                     liberarlista(&cat);
                     return;
-                }else if(opcion==n){
+                }else if(opcion==n){ //pagar carrito seleccionado
                     curs_set(0);
                     clear();
+
                     //mandar totalpagar a servidor para reporte de venta
-                    if(!empty(carrito)){
-                        Vaciarlista(carrito);
+
+                    if(!empty(carrito)){ //verifica si el carrito esta vacio
+                        Vaciarlista(carrito); //elimina los elementos del carrito
                         ImprimirCentrado(LINES/2, "Carrito pagado con exito.");
                         getch();
                         opcion=0;
@@ -134,7 +138,7 @@ void Carrito(char *usuario){
                         break;
                     }
                     
-                }else{
+                }else{ //cualquier elemento del carrito elegido
                     elegido= get(opcion,carrito);
                     curs_set(0);
                     clear();
@@ -143,6 +147,7 @@ void Carrito(char *usuario){
                     mvprintw((LINES/2)+2, (COLS/2)-10, "%c: Agregar",24);
                     mvprintw((LINES/2)+2, (COLS/2)+10, "%c: Quitar",25);
                     int cantidad=0;
+                    //elegir cantidad a quitar del carrito
                     while(!salir){
                         move((LINES/2),(COLS/2)+strlen("Cuantas unidades de  desea quitar del carrito?: "));
                         clrtoeol();
@@ -161,17 +166,17 @@ void Carrito(char *usuario){
                             
                             case 10:
                                 elegido.cantidad=elegido.cantidad-cantidad;
-                                if(elegido.cantidad==0){
+                                if(elegido.cantidad==0){ //si se quita toda la cantidad del carrito entonces lo quita del carrito y lo añade al catalogo
                                     borrar(opcion, carrito);
                                     add(opcion,elegido,cat);
                                 }else { 
-                                    set(opcion, elegido, carrito);
+                                    set(opcion, elegido, carrito);//actualiza la cantidad de elementos del producto en el carrito
 
                                 }
                             
                                 salir=1;
                             break;
-                            case 27:
+                            case 27:// se preciono la tecla esc
                                 liberarlista(&carrito);
                                 liberarlista(&cat);
                                 endwin();
@@ -181,7 +186,7 @@ void Carrito(char *usuario){
                 }
             break;
             
-            case 27:
+            case 27://se preciono la tecla esc
             liberarlista(&carrito);
             liberarlista(&cat);
             endwin();
@@ -236,7 +241,8 @@ void Catalogo(char *usuario){
         } else if (opcion < n) {
             pos = 0;
         }
-        if(!empty(cat))
+        if(!empty(cat))//verifica si el catalogo esta vacio
+        //imprime el catalogo
         for (int i = pos; i < n && (i - pos) < 30; i++) {
             info ac = get(i, cat);
             int fila = (LINES / 2) - (30 / 2) + (i - pos);
@@ -257,6 +263,7 @@ void Catalogo(char *usuario){
         }
         
         refresh();
+        //imprime el boton de salir
             if(opcion ==n)
                 attron(A_REVERSE); 
             
@@ -282,11 +289,11 @@ void Catalogo(char *usuario){
                 break;
 
             case 10: // ENTER
-                if(opcion==n){
+                if(opcion==n){//salir seleccionado
                     liberarlista(&carrito);
                     liberarlista(&cat);
                     return;
-                }else{
+                }else{//cualquier elemento del catalogo seleccionado
                     elegido= get(opcion,cat);
                     curs_set(0);
                     clear();
@@ -295,6 +302,7 @@ void Catalogo(char *usuario){
                     mvprintw((LINES/2)+2, (COLS/2)-10, "%c: Agregar",24);
                     mvprintw((LINES/2)+2, (COLS/2)+10, "%c: Quitar",25);
                     int cantidad=0;
+                    //seleccionar cuantos elementos agregar al carrito de compra desde el catalogo
                     while(!salir){
                         move((LINES/2),(COLS/2)+strlen("Cuantas unidades de  desea agregar al carrito?: "));
                         clrtoeol();
@@ -313,13 +321,15 @@ void Catalogo(char *usuario){
                             
                             case 10:
                                 elegido.cantidad=elegido.cantidad-cantidad;
-                                if(elegido.cantidad==0){
+                                if(elegido.cantidad==0){//si se seleccionaron todos los elementos disponibles, lo borra del catalogo y lo añade al carrito
                                     borrar(opcion, cat);
-                                }else { 
-                                set(opcion, elegido, cat);
-                                //actualizar catalogo servidor
-                                add(carrito->NE,elegido,carrito);
-                                //añadir a carrito de compra servidor
+                                    add(carrito->NE,elegido,carrito);
+                                }else { //actualiza los elementos en el catalogo y añade la cantidad del producto seleccionado al carrito
+                                    set(opcion, elegido, cat);
+                                    //actualizar catalogo servidor
+                                    elegido.cantidad=cantidad;
+                                    add(carrito->NE,elegido,carrito);
+                                    //añadir a carrito de compra servidor
                                 }
                             
                                 salir=1;
@@ -387,7 +397,7 @@ int Perfil(char *usr){
         
         mvprintw((LINES/2)-3, ((COLS-strlen("Editar perfil"))/2), "Editar perfil");
         ImprimirCentrado((LINES/2)-2, "Selecciona una opcion");
-        
+        //imprime las opciones disponibles
         for(int i = 0; i < n; i++) {
             if(i == opcion)
                 attron(A_REVERSE); 
@@ -399,11 +409,8 @@ int Perfil(char *usr){
         }
 
         refresh();
-
-        for(int i = 0; i < l; i++) {
-            if(i==4)
-                break;
-            else
+        //imprime los datos del usaurio menos la contraseña
+        for(int i = 0; i < l-1; i++) {
                 mvprintw((LINES/2)+ i, ((COLS/2)+strlen(menu[i])) -25, "%s", DatosUsuario[i]);
         }
         refresh();
@@ -422,7 +429,7 @@ int Perfil(char *usr){
         };
 
         int pos = 0;
-
+        //imprime mensajes de error si es que usuario ingreso datos invalidos en la iteracion anterior
         for (int i = 0; i < ne; i++) {
             if (ver[i] == 1) {
                 move((LINES / 2) + 11 + pos, 0);
@@ -450,7 +457,7 @@ int Perfil(char *usr){
             case 10: // ENTER
                 curs_set(1);
                 switch (opcion) {
-                    case 0:
+                    case 0://nombre elegido, guarda el nombre que se ingreso si es que es valido
                         ver[opcion]=0;
                         move((LINES/2)+opcion,8+(COLS/2)-26);
                         clrtoeol(); 
@@ -464,7 +471,7 @@ int Perfil(char *usr){
 
                         noecho();
                         break;
-                    case 1:
+                    case 1://apellido elegido, guarda el apellido que se ingreso si es que es valido
                         move((LINES/2)+opcion,10+(COLS/2)-26);
                         clrtoeol(); 
                         echo();
@@ -478,8 +485,7 @@ int Perfil(char *usr){
                         }
                         noecho();
                         break;
-                    case 2:
-                        
+                    case 2://nombre de usuario elegido, lo guarda si es valido
                         move((LINES/2)+opcion,9+(COLS/2)-26);
                         clrtoeol(); 
                         echo();
@@ -493,8 +499,7 @@ int Perfil(char *usr){
                         }
                         noecho();
                         break;
-                    case 3:
-                        
+                    case 3://correo elegido, lo guarda si es valido
                         move((LINES/2)+opcion,8+(COLS/2)-26);
                         clrtoeol(); 
                         echo();
@@ -507,12 +512,11 @@ int Perfil(char *usr){
                         }
                         noecho();
                         break;
-                    case 4:
+                    case 4:// contraseña elegida, la guarda si es valida
                         ver[opcion]=0;
                         move((LINES/2)+opcion,10+(COLS/2)-26);
                         clrtoeol(); 
                         noecho();
-                        //getstr (login.pass);
                         getstr (aux);
                         if(strcmp(aux,"") && strcmp(aux, " ") && ComprobarPassword(aux)==5){
                             hash(aux, aux);
@@ -522,8 +526,7 @@ int Perfil(char *usr){
                         }
                         noecho();
                         break;
-                    case 5:
-
+                    case 5://guardar datos elegido
                         curs_set(0);
                         clear();
                         if(ModificarAtributo(login, usr)){ //mandar modificaciones al servidor (funcion en funciones_cliente)
@@ -573,13 +576,12 @@ void MenuPrincipal(char *usuario){
         
         mvprintw((LINES/2)-3, ((COLS-strlen("!Bienvenido ")-strlen(usuario))/2), "!Bienvenido %s!", usuario);
         ImprimirCentrado((LINES/2)-2, "Selecciona una opcion");
-        //mvprintw(3, 10, "Selecciona una opcion:");
-        ImprimirCentrado(2, "");
+        
+        //imprime las opciones del menu
         for(int i = 0; i < n; i++) {
             if(i == opcion)
                 attron(A_REVERSE); 
             ImprimirCentrado((LINES/2)+ i, menu[i]);
-            //mvprintw((LINES/2)+ i, 50, "%s", menu[i]);
             attroff(A_REVERSE);
         }
 
@@ -608,9 +610,9 @@ void MenuPrincipal(char *usuario){
                         Carrito(usuario);
                         break;
                     case 2:
-                        if (Perfil(usuario)==1)
+                        if (Perfil(usuario)==1) //si hubo cambios en el perfil y fueron guardados correctamente entonces regresa al inicio de sesion
                             return;
-                        else
+                        else//si no entonces regresa a esta ventana
                             break;
                     case 3:
                         return;
@@ -666,11 +668,10 @@ void registrar() {
         clear();
 
         ImprimirCentrado((LINES/2) -3, "Registrar un usuario");
-        //mvprintw(3, 10, "Registrar un usuario");
-
+        //imprime las opciones del menu
         for(int i = 0; i < n; i++) {
             if(i == opcion)
-                attron(A_REVERSE);//arreglar para no imprimir la contrasena
+                attron(A_REVERSE);
             if(i>=5) 
                 ImprimirCentrado((LINES/2)+i, menu[i]);
             else
@@ -680,13 +681,14 @@ void registrar() {
         }
 
         refresh();
-
-        for(int i = 0; i < l; i++) {
+        //imprime los datos ingresados por el usuario, exceptuando la contraseña
+        for(int i = 0; i < l-1; i++) {
             mvprintw((LINES/2)+ i, ((COLS/2)+strlen(menu[i])) -25, "%s", DatosUsuario[i]);
         }
 
         move((LINES/2)+11, 0);
         clrtoeol();
+        //imprime mensajes de error si el usuario ingreso datos invalidos en la iteracion anterior
         if(cor==1){
             
             ImprimirCentrado((LINES/2)+11, "Correo Invalido");
@@ -730,35 +732,34 @@ void registrar() {
             case 10: // ENTER
             curs_set(1);
                 switch (opcion) {
-                    case 0:
+                    case 0://nombre seleccionado, sin restriccion
                     move((LINES/2),8+(COLS/2)-26);
                     clrtoeol(); 
                     echo();
                     getstr (user.nombre);
                     noecho();
                     break;
-                    case 1:
+                    case 1://apellido seleccionado, sin restriccion
                     move((LINES/2)+1,10+(COLS/2)-26);
                     clrtoeol(); 
                     echo();
                     getstr (user.apellido);
                     noecho();
                     break;
-                    case 2:
+                    case 2://correo seleccionado, debe contener @ y . despues del @, tambien no debe de existir en la base de datos
                     cor=0;
                     move((LINES/2)+2,8+(COLS/2)-26);
                     clrtoeol(); 
                     echo();
                     getstr (user.correo);
                     noecho();
-                    if (VerificarCorreo(user.correo) == 0) {
+                    if (VerificarCorreo(user.correo) == 0){
                         move((LINES/2)+11, 0);
                         clrtoeol();
                         move((LINES/2)+12, 0);
                         strcpy(user.correo, "");
                         clrtoeol();
                         cor=1;
-                        //mvprintw(15, 10, "Correo Invalido");
                     }else if (BuscarCorreo(user.correo) == 1) {
                         move((LINES/2)+11, 0);
                         clrtoeol();
@@ -776,7 +777,7 @@ void registrar() {
                         clrtoeol();
                     }
                     break;
-                    case 3:
+                    case 3://usuario seleccionado, no debe existir en la base de datos
                     us=0;
                     echo();
                     move((LINES/2)+3,9+(COLS/2)-26);
@@ -800,7 +801,7 @@ void registrar() {
                         clrtoeol();
                     }
                     break;
-                    case 4:
+                    case 4: //contraseña elegida, las restricciones son impresas
                     noecho();
                     ImprimirCentrado((LINES/2)+11, "La password debe tener minimo 12 caracteres de largo." );
                     ImprimirCentrado((LINES/2)+12, "La password debe ser una combinacion de mayusculas, minusculas, numeros y simbolos.");
@@ -836,7 +837,8 @@ void registrar() {
                     case 5:
                     curs_set(0);
                         clear();
-                        if((strcmp(user.pass, "")==0)||(strcmp(user.correo, "")==0)||(strcmp(user.usr, "")==0)||(strcmp(user.nombre, "")==0)){
+                        //verifica que no halla datos sin llenar
+                        if((strcmp(user.pass, "")==0)||(strcmp(user.correo, "")==0)||(strcmp(user.usr, "")==0)||(strcmp(user.usr, " ")==0)||(strcmp(user.nombre, "")==0)){
                             mvprintw(3, 10, "Datos incompletos.");
                             getch();
                             clear();
@@ -886,8 +888,6 @@ void iniciarSesion() {
     int opcion = 0;
     int tecla;
 
-
-
     char *menu[] = {
         "Usuario:",
         "Password:",
@@ -908,8 +908,8 @@ void iniciarSesion() {
         curs_set(0);
         clear();
         ImprimirCentrado((LINES/2) -3, "Iniciar Sesion");
-        //mvprintw(3, 10, "Iniciar Sesion");
 
+        //imprime las opciones del menu
         for(int i = 0; i < n; i++) {
             if(i == opcion)
                 attron(A_REVERSE); 
@@ -921,11 +921,12 @@ void iniciarSesion() {
         }
         refresh();
 
+        //imprime datos del usuario menos la contraseña
         for(int i = 0; i < l; i++) {
             mvprintw((LINES/2)+i, ((COLS/2)+strlen(menu[i])) -25, "%s", DatosUsuario[i]);
         }
 
-        if(errorCount>0)
+        if(errorCount>0) //imprime error si es que los datos no son correctos
             ImprimirCentrado((LINES/2) +11, "Usuario y/o password incorrectos.");
         
         refresh();
@@ -946,48 +947,45 @@ void iniciarSesion() {
             case 10: // ENTER
             curs_set(1);
                 switch (opcion) {
-                    case 0:
+                    case 0://leer usuario
                     move((LINES/2),9+(COLS/2) -26);
                     clrtoeol(); 
                     echo();
                     getstr (user.usr);
                     noecho();
                     break;
-                    case 1:
+                    case 1://leer contraseña
                     move((LINES/2) +1,10+(COLS/2) -26);
                     clrtoeol(); 
                     noecho();
                     getstr (pass);
                     break;
-                    case 2:
+                    case 2://Entrar seleccionado
                     curs_set(0);
                     hash(pass, hash_pass);
                     strncpy(user.pass, hash_pass, sizeof(user.pass));
 
-                    if(SolicitarSesion(user) == 1) { //pedir la sesion al servidor (funcion en funciones_cliente)
+                    if(SolicitarSesion(user) == 1) { //pedir la sesion al servidor (funcion en funciones_cliente), si usuario existe en base de datos entra al menu principal
                         clear();
                         MenuPrincipal(user.usr);
                         return;
                     }else{
-                        //mvprintw(10, 10, "Datos incorrectos.");
                         strcpy(user.usr, "");
                         move((LINES/2),9+(COLS/2) -26);
                         clrtoeol();
                         strcpy(user.pass, "");
                         move((LINES/2) +1,10+(COLS/2) -26);
                         clrtoeol(); 
+                        opcion=0;
                         errorCount++;
                         clear();
                     }
-                    if(errorCount == 3 && errorCount >0) {
+                    if(errorCount == 3 && errorCount >0) { //limite de intentos alcanzado, sale de la ventana de inicio de sesion
                         clear();
                         ImprimirCentrado((LINES/2), "3 intentos fallidos.");
-                        //mvprintw(3, 10, "3 Intentos Fallidos");
                         getch();
                         endwin();
                         return;
-                    }else{
-                        ImprimirCentrado((LINES/2) +11, "Usuario y/o password incorrectos.");
                     }
                     break;
                     case 3:
@@ -1017,12 +1015,14 @@ void menu() {
 
     int n = 3;
 
+    //inicia la pantalla, quita el retraso al boton esc, activa no mostrar el input y activa la deteccion del teclado
     initscr();
     set_escdelay(0);
     noecho();
     curs_set(0);
     keypad(stdscr, TRUE); 
 
+    //si la terminal admite color, inicia los colores negro y cyan para la interfaz
     if (has_colors()) {
         start_color();
         init_pair(1, COLOR_BLACK, COLOR_CYAN);
@@ -1034,18 +1034,15 @@ void menu() {
         curs_set(0);
         clear();
 
-        //mvprintw(3, 10, "Selecciona una opcion:");
-
         ImprimirCentrado((LINES/2) -3, "Punto de venta");
         ImprimirCentrado((LINES/2) -2, "Selecciona una opcion");
 
-
+        //imprime las opciones del menu
         for(int i = 0; i < n; i++) {
             if(i == opcion)
                 attron(A_REVERSE);
             
-            ImprimirCentrado((LINES/2)+i, menu[i]); 
-            //mvprintw(5 + i, 10, "%s", menu[i]);
+            ImprimirCentrado((LINES/2)+i, menu[i]);
             attroff(A_REVERSE);
         }
 
@@ -1089,6 +1086,5 @@ void menu() {
 
 int main() {
     menu();
-    //Catalogo("mo");
     return 0;
 }
