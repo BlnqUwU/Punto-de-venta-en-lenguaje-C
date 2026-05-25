@@ -12,6 +12,7 @@ typedef struct informacion {
 	
 	char producto[100];
     int cantidad;
+    float precio;
 	
 } info;
 
@@ -31,7 +32,7 @@ typedef struct Cab {
 } cabecera;
 
 typedef  cabecera * lista;
-typedef  NODO * link;
+typedef  NODO * enlace;
 typedef  enum men { NO_MEMORY , OKE , INDEXOUTOFBOUND, EMPTY } mensaje;
 typedef  enum b { FALSO , TRU } booleano;
 
@@ -58,7 +59,7 @@ int ModificarAtributo(usuario u, char *usr);
 
 //lista doblemente enlazada
 info get ( int pos , lista l );  
-link ubicar ( int pos , lista l );                                        
+enlace ubicar ( int pos , lista l );                                        
 mensaje add ( int pos, info E , lista l );         
 mensaje borrar (  int Pos , lista l );                   
 booleano empty ( lista l  );

@@ -1,14 +1,347 @@
 #include <ncurses.h>
-#include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 #include "cliente.h"
 
 
-void Catalogo(char *usuario){
+void Carrito(char *usuario){
+    int opcion = 0;
+    int tecla,tecla2;
+    
+
+    lista carrito;
+    crearlista(&carrito);
+    char *menu[] = {
+        "Pagar Carrito",
+        "Salir"
+    };
+    int m= sizeof(menu)/sizeof(menu[0]);
+
+    
+    //insertar lista de compra de memoria compartida a lista
+    
+    lista cat;
+    crearlista(&cat);
+    info elegido;
+    info auxtotal;
+    set_escdelay(0);
+    noecho();
+    curs_set(0);
+    keypad(stdscr, TRUE); 
+
+
+    while(1) {
+        curs_set(0);
+        clear();
+        int n=carrito->NE;
+        int salir=0;
+        float totalpagar=0;
+        
+        ImprimirCentrado(5, "Punto de venta");
+        ImprimirCentrado(6, "Selecciona una opcion");
+
+        mvprintw(8, 25-strlen("producto")/2, "PRODUCTO");
+        mvprintw(8, 100-strlen("cantidad en carrito")/2, "CANTIDAD EN CARRITO");
+        mvprintw(8, 175-strlen("precio")/2, "PRECIO");
+        
+        refresh();
+
+        char pre[50];
+        char cant[50];
+        char total[50];
+        int pos = 0;
+        if (opcion < n && opcion >= 30) {
+            pos = opcion - 30 + 1;
+        } else if (opcion < n) {
+            pos = 0;
+        }
+
+        if(!empty(carrito)){
+        for (int i = pos; i < n && (i - pos) < 30; i++) {
+            info ac = get(i, carrito);
+            int fila = (LINES / 2) - (30 / 2) + (i - pos);
+
+            move(fila, 0);
+            clrtoeol();
+
+            if (i == opcion)
+                attron(A_REVERSE);
+            
+            sprintf(pre, "%.2f", ac.precio);
+            sprintf(cant, "%d", ac.cantidad);
+            mvprintw(fila, 25 - strlen(ac.producto) / 2, "%s", ac.producto);
+            mvprintw(fila, 100 - strlen(cant) / 2, "%d", ac.cantidad);
+            mvprintw(fila, 174 - strlen(pre) / 2, "$%.2f", ac.precio);
+            
+            attroff(A_REVERSE);
+        }
+        
+        for(int i=0; i<carrito->NE; i++){
+            auxtotal=get(i,carrito);
+            totalpagar+=auxtotal.precio*auxtotal.cantidad;
+        }
+
+        sprintf(total, "%.3f", totalpagar);
+        }
+        mvprintw(41, 25 -strlen("Total a pagar: $")- strlen(total) / 2, "TOTAL A PAGAR: $%.3f", totalpagar);
+        refresh();
+        
+        for (int i = 0; i < m; i++) {
+            if(i+n==opcion)
+                attron(A_REVERSE); 
+            
+            ImprimirCentrado(42+i, menu[i]);
+            
+            attroff(A_REVERSE);
+        
+        }
+        
+        refresh();
+
+
+        tecla = getch();
+
+        switch(tecla) {
+            case KEY_UP:
+                opcion--;
+                if(opcion < 0) opcion = n+1;
+                break;
+
+            case KEY_DOWN:
+                opcion++;
+                if(opcion >= n+2) opcion = 0;
+                break;
+
+            case 10: // ENTER
+                if(opcion==n+1){
+                    liberarlista(&carrito);
+                    liberarlista(&cat);
+                    return;
+                }else if(opcion==n){
+                    curs_set(0);
+                    clear();
+                    //mandar totalpagar a servidor para reporte de venta
+                    if(!empty(carrito)){
+                        Vaciarlista(carrito);
+                        ImprimirCentrado(LINES/2, "Carrito pagado con exito.");
+                        getch();
+                        opcion=0;
+                        break;
+                    }else{
+                        ImprimirCentrado(LINES/2, "Nada por pagar.");
+                        getch();
+                        break;
+                    }
+                    
+                }else{
+                    elegido= get(opcion,carrito);
+                    curs_set(0);
+                    clear();
+                    mvprintw(LINES/2, (COLS/2)-strlen("Cuantas unidades de  desea quitar del carrito?: "), 
+                            "Cuantas unidades de %s desea quitar del carrito?: ", elegido.producto);
+                    mvprintw((LINES/2)+2, (COLS/2)-10, "%c: Agregar",24);
+                    mvprintw((LINES/2)+2, (COLS/2)+10, "%c: Quitar",25);
+                    int cantidad=0;
+                    while(!salir){
+                        move((LINES/2),(COLS/2)+strlen("Cuantas unidades de  desea quitar del carrito?: "));
+                        clrtoeol();
+                        mvprintw((LINES/2), ((COLS/2)+strlen("Cuantas unidades de  desea quitar del carrito?: ")) -25, "%d", cantidad);
+                        tecla2=getch();
+                        switch(tecla2) {
+                            case KEY_UP:
+                                cantidad--;
+                                if(cantidad < 0) cantidad = elegido.cantidad;
+                            break;
+
+                            case KEY_DOWN:
+                                cantidad++;
+                                if(cantidad > elegido.cantidad) cantidad = 0;
+                            break;
+                            
+                            case 10:
+                                elegido.cantidad=elegido.cantidad-cantidad;
+                                if(elegido.cantidad==0){
+                                    borrar(opcion, carrito);
+                                    add(opcion,elegido,cat);
+                                }else { 
+                                    set(opcion, elegido, carrito);
+
+                                }
+                            
+                                salir=1;
+                            break;
+                            case 27:
+                                liberarlista(&carrito);
+                                liberarlista(&cat);
+                                endwin();
+                            return;
+                        }
+                    }
+                }
+            break;
+            
+            case 27:
+            liberarlista(&carrito);
+            liberarlista(&cat);
+            endwin();
+            
+            return;
+        }
+    }
     return;
 }
 
-void Carrito(char *usuario){
+void Catalogo(char *usuario){
+    int opcion = 0;
+    int tecla,tecla2;
+
+    lista cat;
+    crearlista(&cat);
+    char *menu[] = {
+        "Salir"
+    };
+    int m= sizeof(menu)/sizeof(menu[0]);
+
+     //insertar catalogo de memoria compartida a lista
+    
+    info elegido;
+    lista carrito;
+    crearlista(&carrito);
+    set_escdelay(0);
+    noecho();
+    curs_set(0);
+    keypad(stdscr, TRUE); 
+
+
+    while(1) {
+        curs_set(0);
+        clear();
+        int n=cat->NE;
+        int salir=0;
+        
+        ImprimirCentrado(5, "Punto de venta");
+        ImprimirCentrado(6, "Selecciona una opcion");
+
+        mvprintw(8, 25-strlen("producto")/2, "PRODUCTO");
+        mvprintw(8, 100-strlen("cantidad disponible")/2, "CANTIDAD DISPONIBLE");
+        mvprintw(8, 175-strlen("precio")/2, "PRECIO");
+        refresh();
+
+        char pre[50];
+        char cant[50];
+        int pos = 0;
+        if (opcion < n && opcion >= 30) {
+            pos = opcion - 30 + 1;
+        } else if (opcion < n) {
+            pos = 0;
+        }
+        if(!empty(cat))
+        for (int i = pos; i < n && (i - pos) < 30; i++) {
+            info ac = get(i, cat);
+            int fila = (LINES / 2) - (30 / 2) + (i - pos);
+
+            move(fila, 0);
+            clrtoeol();
+
+            if (i == opcion)
+                attron(A_REVERSE);
+            
+            sprintf(pre, "%.2f", ac.precio);
+            sprintf(cant, "%d", ac.cantidad);
+            mvprintw(fila, 25 - strlen(ac.producto) / 2, "%s", ac.producto);
+            mvprintw(fila, 100 - strlen(cant) / 2, "%d", ac.cantidad);
+            mvprintw(fila, 174 - strlen(pre) / 2, "$%.2f", ac.precio);
+            
+            attroff(A_REVERSE);
+        }
+        
+        refresh();
+            if(opcion ==n)
+                attron(A_REVERSE); 
+            
+            ImprimirCentrado(41, menu[0]);
+            
+            attroff(A_REVERSE);
+        
+
+        refresh();
+
+
+        tecla = getch();
+
+        switch(tecla) {
+            case KEY_UP:
+                opcion--;
+                if(opcion < 0) opcion = n;
+                break;
+
+            case KEY_DOWN:
+                opcion++;
+                if(opcion >= n+1) opcion = 0;
+                break;
+
+            case 10: // ENTER
+                if(opcion==n){
+                    liberarlista(&carrito);
+                    liberarlista(&cat);
+                    return;
+                }else{
+                    elegido= get(opcion,cat);
+                    curs_set(0);
+                    clear();
+                    mvprintw(LINES/2, (COLS/2)-strlen("Cuantas unidades de  desea agregar al carrito?: "), 
+                            "Cuantas unidades de %s desea agregar al carrito?: ", elegido.producto);
+                    mvprintw((LINES/2)+2, (COLS/2)-10, "%c: Agregar",24);
+                    mvprintw((LINES/2)+2, (COLS/2)+10, "%c: Quitar",25);
+                    int cantidad=0;
+                    while(!salir){
+                        move((LINES/2),(COLS/2)+strlen("Cuantas unidades de  desea agregar al carrito?: "));
+                        clrtoeol();
+                        mvprintw((LINES/2), ((COLS/2)+strlen("Cuantas unidades de  desea agregar al carrito?: ")) -25, "%d", cantidad);
+                        tecla2=getch();
+                        switch(tecla2) {
+                            case KEY_UP:
+                                cantidad--;
+                                if(cantidad < 0) cantidad = elegido.cantidad;
+                            break;
+
+                            case KEY_DOWN:
+                                cantidad++;
+                                if(cantidad > elegido.cantidad) cantidad = 0;
+                            break;
+                            
+                            case 10:
+                                elegido.cantidad=elegido.cantidad-cantidad;
+                                if(elegido.cantidad==0){
+                                    borrar(opcion, cat);
+                                }else { 
+                                set(opcion, elegido, cat);
+                                //actualizar catalogo servidor
+                                add(carrito->NE,elegido,carrito);
+                                //añadir a carrito de compra servidor
+                                }
+                            
+                                salir=1;
+                            break;
+                            case 27:
+                                endwin();
+                            break;
+                        }
+                    }
+                }
+            break;
+            
+            case 27:
+            liberarlista(&carrito);
+            liberarlista(&cat);
+            endwin();
+            
+            return;
+        }
+    }
+    liberarlista(&carrito);
+    liberarlista(&cat);
     return;
 }
 
@@ -68,7 +401,10 @@ int Perfil(char *usr){
         refresh();
 
         for(int i = 0; i < l; i++) {
-            mvprintw((LINES/2)+ i, ((COLS/2)+strlen(menu[i])) -25, "%s", DatosUsuario[i]);
+            if(i==4)
+                break;
+            else
+                mvprintw((LINES/2)+ i, ((COLS/2)+strlen(menu[i])) -25, "%s", DatosUsuario[i]);
         }
         refresh();
         
@@ -175,12 +511,13 @@ int Perfil(char *usr){
                         ver[opcion]=0;
                         move((LINES/2)+opcion,10+(COLS/2)-26);
                         clrtoeol(); 
-                        echo();
+                        noecho();
                         //getstr (login.pass);
                         getstr (aux);
-                        if(strcmp(aux,"") && strcmp(aux, " ") && ComprobarPassword(aux)<5)
+                        if(strcmp(aux,"") && strcmp(aux, " ") && ComprobarPassword(aux)==5){
+                            hash(aux, aux);
                             strcpy(login.pass, aux);
-                        else{
+                        }else{
                             ver[opcion]=1;
                         }
                         noecho();
@@ -189,7 +526,7 @@ int Perfil(char *usr){
 
                         curs_set(0);
                         clear();
-                        if(ModificarAtributo(login, usr)){
+                        if(ModificarAtributo(login, usr)){ //mandar modificaciones al servidor (funcion en funciones_cliente)
                             ImprimirCentrado(LINES/2, "Cambios Guardados con exito, vuelve a iniciar sesion.");
                             getch();
                             clear();
@@ -506,7 +843,7 @@ void registrar() {
                             
                             break;
                         }else{
-                            if (RegistrarUsuario(user,"usuarios.txt") == 1) {
+                            if (RegistrarUsuario(user,"usuarios.txt") == 1) { //mandar registro a servidor (funcion en funciones_cliente)
                                 mvprintw(3, 10, "Registro Exitoso");
                                 getch();
                                 clear();
@@ -627,7 +964,7 @@ void iniciarSesion() {
                     hash(pass, hash_pass);
                     strncpy(user.pass, hash_pass, sizeof(user.pass));
 
-                    if(SolicitarSesion(user) == 1) {
+                    if(SolicitarSesion(user) == 1) { //pedir la sesion al servidor (funcion en funciones_cliente)
                         clear();
                         MenuPrincipal(user.usr);
                         return;
@@ -752,5 +1089,6 @@ void menu() {
 
 int main() {
     menu();
+    //Catalogo("mo");
     return 0;
 }

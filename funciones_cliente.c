@@ -238,7 +238,7 @@ info get ( int pos , lista l ) {
 	
 	info copia;
 	
-	link Ite= ubicar (pos , l);
+	enlace Ite= ubicar (pos , l);
 	
 	if (Ite == NULL)
 	    return copia;
@@ -248,9 +248,9 @@ info get ( int pos , lista l ) {
 	return copia;   
 }                                        
 
-link ubicar ( int p , lista l ){
+enlace ubicar ( int p , lista l ){
 	int mitad,i;
-	link Ite;
+	enlace Ite;
 	if (l == NULL || empty (l))
 	    return NULL;    
 	if (p>=0 && p<=l->NE-1)    
@@ -280,9 +280,9 @@ link ubicar ( int p , lista l ){
 
 mensaje add ( int pos, info E , lista l ){
 	
-	link act,ant;
+	enlace act,ant;
 	
-	link temp = (link) malloc (sizeof(NODO));
+	enlace temp = (enlace) malloc (sizeof(NODO));
 	
 	if (temp == NULL)
 	    return NO_MEMORY; 
@@ -324,7 +324,7 @@ mensaje add ( int pos, info E , lista l ){
 
 mensaje borrar (  int p , lista l ){
 
-    link temp,s,a,act;
+    enlace temp,s,a,act;
     
 	if (l == NULL || empty (l))
 	    return EMPTY;
@@ -374,7 +374,7 @@ booleano empty ( lista l  ){
 }
 
 mensaje set ( int p , info E , lista l){
-	link Ite;
+	enlace Ite;
 	if (l == NULL || empty (l))
 	    return EMPTY;
 	    

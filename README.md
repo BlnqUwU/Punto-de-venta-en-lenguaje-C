@@ -19,6 +19,12 @@ Ejecuta
 
 ## Changelog
 
+### V0.3
+-   Ventana de carrito de compra y catalogo completo
+-   Frontend completado
+-   Buscando Insectos
+-   Herobrine removed
+
 ### V0.2.3
 -   Ventana de cambio de perfil agregada
 -   Fix bugs
