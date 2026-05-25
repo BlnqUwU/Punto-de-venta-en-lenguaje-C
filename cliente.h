@@ -8,6 +8,7 @@ typedef struct user
     char pass[100];
 } usuario;
 
+//define el contenido de un elemento de la lista
 typedef struct informacion {
 	
 	char producto[100];
@@ -16,7 +17,7 @@ typedef struct informacion {
 	
 } info;
 
-
+//guarda el contenido de la lista e indica que elemento sigue y cual esta antes
 typedef struct nodo {
 	
     info Inf;
@@ -25,12 +26,14 @@ typedef struct nodo {
   	
 } NODO;
 
+//indica el numero de elementos en la lista, el inicio y el final de esta
 typedef struct Cab {
 	NODO * I;
 	NODO * F;
 	int NE;
 } cabecera;
 
+//alias para la lista
 typedef  cabecera * lista;
 typedef  NODO * enlace;
 typedef  enum men { NO_MEMORY , OKE , INDEXOUTOFBOUND, EMPTY } mensaje;

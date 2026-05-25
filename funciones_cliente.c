@@ -193,6 +193,7 @@ usuario SolicitarPerfil(char *usr){
     return user;
 }
 
+//modifica un atributo especifico del usuario y guarda los cambios en el archivo correspondiente
 int ModificarAtributo(usuario u, char *usr){
     char linea[200];
     FILE *archivo = fopen("usuarios.txt", "r");
@@ -205,7 +206,6 @@ int ModificarAtributo(usuario u, char *usr){
         sscanf(linea, "%[^,],%[^,],%[^,],%[^,],%[^,\n]",
                user.nombre, user.apellido, user.correo, user.usr, user.pass);
         if(strcmp(user.usr, usr) == 0){
-            //fclose(archivo);
             RegistrarUsuario(u, "temp.txt");
         }else{
             RegistrarUsuario(user, "temp.txt");
@@ -218,6 +218,7 @@ int ModificarAtributo(usuario u, char *usr){
         return 1;   
 }
 
+//codifica la contraseña
 void hash(char *input, char *output) {
     unsigned long h = 5381; // semilla tipo djb2
 
