@@ -1,3 +1,6 @@
+#ifndef CLIENTE_H
+#define CLIENTE_H
+
 //se define el tipo de dato usuario
 typedef struct user
 {
@@ -10,27 +13,27 @@ typedef struct user
 
 //define el contenido de un elemento de la lista
 typedef struct informacion {
-	
-	char producto[100];
+
+    char producto[100];
     int cantidad;
     float precio;
-	
+
 } info;
 
 //guarda el contenido de la lista e indica que elemento sigue y cual esta antes
 typedef struct nodo {
-	
+
     info Inf;
     struct nodo * sig;
-	struct nodo * ant;
-  	
+    struct nodo * ant;
+
 } NODO;
 
 //indica el numero de elementos en la lista, el inicio y el final de esta
 typedef struct Cab {
-	NODO * I;
-	NODO * F;
-	int NE;
+    NODO * I;
+    NODO * F;
+    int NE;
 } cabecera;
 
 //alias para la lista
@@ -61,12 +64,14 @@ usuario SolicitarPerfil(char *usr);
 int ModificarAtributo(usuario u, char *usr);
 
 //lista doblemente enlazada
-info get ( int pos , lista l );  
-enlace ubicar ( int pos , lista l );                                        
-mensaje add ( int pos, info E , lista l );         
-mensaje borrar (  int Pos , lista l );                   
+info get ( int pos , lista l );
+enlace ubicar ( int pos , lista l );
+mensaje add ( int pos, info E , lista l );
+mensaje borrar (  int Pos , lista l );
 booleano empty ( lista l  );
-mensaje set ( int Pos ,  info E , lista l);      
-mensaje  crearlista( lista * l ); 
-void  liberarlista( lista * l );  
-void Vaciarlista( lista l );  
+mensaje set ( int Pos ,  info E , lista l);
+mensaje  crearlista( lista * l );
+void  liberarlista( lista * l );
+void Vaciarlista( lista l );
+
+#endif
