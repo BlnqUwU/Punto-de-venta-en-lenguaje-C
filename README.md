@@ -19,6 +19,12 @@ Ejecuta
 
 ## Changelog
 
+### V0.4
+-   Añadida vista de administrado
+-   Añadida regla "make administrado" a Makefile
+-   Bug fixed en cliente?
+-   Herobrine removed
+
 ### V0.3
 -   Ventana de carrito de compra y catalogo completo
 -   Frontend completado

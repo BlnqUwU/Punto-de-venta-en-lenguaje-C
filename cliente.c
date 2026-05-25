@@ -151,7 +151,7 @@ void Carrito(char *usuario){
                     while(!salir){
                         move((LINES/2),(COLS/2)+strlen("Cuantas unidades de  desea quitar del carrito?: "));
                         clrtoeol();
-                        mvprintw((LINES/2), ((COLS/2)+strlen("Cuantas unidades de  desea quitar del carrito?: ")) -25, "%d", cantidad);
+                        mvprintw((LINES/2), ((COLS/2)+strlen("Cuantas unidades de  desea quitar del carrito?: ")) -25, "%d", cantidad);//posible error de escritura (revisar estando mas conciente)
                         tecla2=getch();
                         switch(tecla2) {
                             case KEY_UP:
@@ -209,7 +209,8 @@ void Catalogo(char *usuario){
     int m= sizeof(menu)/sizeof(menu[0]);
 
      //insertar catalogo de memoria compartida a lista
-    
+    info aux={"asdasdasdasdasdasd",1,10};
+    add(0,aux,cat);
     info elegido;
     lista carrito;
     crearlista(&carrito);
@@ -304,9 +305,9 @@ void Catalogo(char *usuario){
                     int cantidad=0;
                     //seleccionar cuantos elementos agregar al carrito de compra desde el catalogo
                     while(!salir){
-                        move((LINES/2),(COLS/2)+strlen("Cuantas unidades de  desea agregar al carrito?: "));
+                        move((LINES/2),(COLS/2));
                         clrtoeol();
-                        mvprintw((LINES/2), ((COLS/2)+strlen("Cuantas unidades de  desea agregar al carrito?: ")) -25, "%d", cantidad);
+                        mvprintw((LINES/2), ((COLS/2)+strlen("Cuantas unidades de  desea agregar al carrito?: ")+strlen(elegido.producto)) -25, "%d", cantidad);
                         tecla2=getch();
                         switch(tecla2) {
                             case KEY_UP:
