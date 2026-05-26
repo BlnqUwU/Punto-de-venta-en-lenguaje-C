@@ -1,6 +1,6 @@
-cliente: cliente.c funciones_cliente.c cliente.h
-	gcc cliente.c funciones_cliente.c cliente.h -o cliente -lncurses
-
-admin: admin.c funciones_admin.c admin.h
-	touch catalogo.txt
-	gcc admin.c funciones_admin.c admin.h -o admin -lncurses
+servidor: funciones_servidor.c funciones_admin.c utilidades.c 
+	gcc servidor.c funciones_servidor.c funciones_admin.c utilidades.c  -o servidor -pthread
+cliente: cliente.c funciones_cliente.c cliente_backend.c utilidades.c
+	gcc cliente.c funciones_cliente.c cliente_backend.c utilidades.c -o cliente -lncurses
+admin: funciones_servidor.c funciones_admin.c utilidades.c admin_backend.c
+	gcc admin.c funciones_servidor.c funciones_admin.c utilidades.c admin_backend.c  -o admin -lncurses
