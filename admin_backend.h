@@ -5,9 +5,13 @@
 
 int  conectarServidorAdmin();
 void desconectarServidorAdmin();
+
 void cargarCatalogoAdmin(listaproducto cat);
 int  agregarProductoAdmin(prod p);
 void modificarExistenciasAdmin(const char *nombreProducto, int nuevaCantidad);
 void eliminarProductoAdmin(const char *nombreProducto);
 
+void cargarUsuariosAdmin(listaproducto cat);
+void modificarAtributoAdmin(const char *nombreProducto, int nuevaCantidad);
+void eliminarProductoAdmin(const char *nombreProducto);
 #endif

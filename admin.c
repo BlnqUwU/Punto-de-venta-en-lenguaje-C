@@ -188,6 +188,7 @@ void EditarUsuario(admin user){
         "Correo:",
         "Usuario:",
         "Aplicar cambios",
+        "Eliminar usuario",
         "Regresar "
     };
 
@@ -365,6 +366,21 @@ void EditarUsuario(admin user){
                             }
                         }
                     case 5:
+                        curs_set(0);
+                        clear();
+                        if (BorrarUsuario(user,usr[0]) == 1) { //mandar registro a servidor (funcion en funciones_cliente)
+                            mvprintw(3, 10, "Cambios registrados.");
+                            getch();
+                            clear();
+                            return;
+                        }else {
+                            mvprintw(3, 10, "Cambio fallido.");
+                            getch();
+                            clear();
+                            return;
+                        }
+                    return;
+                    case 6:
                     return;
 
 
@@ -608,6 +624,8 @@ void GenerarReportes(){
     crearlistaventa(&ventasemanal);
 
 
+    listaventa ventadiaria;
+    crearlistaventa(&ventadiaria);
 
     listaventa ventamensual;
     crearlistaventa(&ventamensual);
@@ -656,28 +674,35 @@ void GenerarReportes(){
 
                 switch (opcion) {
                     case 0://reporte diario
-                        VentaDiaria();
+                        Vaciarlistaventa(ventadiaria);
+                        cargarVentasPorRango(ventadiaria, 1);
+                        ventas(ventadiaria);
                         break;
                     case 1://reporte semanal
-                        //pasar venta semanal de mem compartida a lista
+                        Vaciarlistaventa(ventasemanal);
+                        cargarVentasPorRango(ventasemanal, 7);
                         ventas(ventasemanal);
                         break;
                     case 2://reporte mensual
-                        //pasar venta mensual de mem compartida a lista
+                        Vaciarlistaventa(ventamensual);
+                        cargarVentasPorRango(ventamensual, 30);
                         ventas(ventamensual);
                         break;
                     case 3:
+                        liberarlistaventa(&ventadiaria);
                         liberarlistaventa(&ventasemanal);
                         liberarlistaventa(&ventamensual);
                         return;
                 }
                 break;
             case 27:
+            liberarlistaventa(&ventadiaria);
             liberarlistaventa(&ventasemanal);
             liberarlistaventa(&ventamensual);
             return;
         }
     }
+    liberarlistaventa(&ventadiaria);
     liberarlistaventa(&ventasemanal);
     liberarlistaventa(&ventamensual);
     return;
@@ -880,7 +905,7 @@ void AdministrarUsuarios(){
         } else if (opcion < n) {
             pos = 0;
         }
-        if(!empty(usuarios))//verifica si el catalogo esta vacio
+        if(!empty(usuarios))//verifica si hay usuarios
         //imprime el catalogo
         for (int i = pos; i < n && (i - pos) < 30; i++) {
             info ac = get(i, usuarios);
@@ -930,7 +955,7 @@ void AdministrarUsuarios(){
                 if(opcion==n){//salir seleccionado
                     liberarlista(&usuarios);
                     return;
-                }else{//cualquier elemento del catalogo seleccionado
+                }else{//cualquier usuario seleccionado
                     elegido=get(opcion, usuarios);
                     EditarUsuario(elegido.a);
                 }
@@ -1018,7 +1043,6 @@ void MenuPrincipal(char *usuario){
 
 void iniciarSesion() {
 
-    //initscr();
     set_escdelay(0);
     noecho();
     clear();

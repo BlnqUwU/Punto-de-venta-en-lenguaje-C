@@ -4,6 +4,7 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <sys/sem.h>
+#include <time.h>
 #include "inventario.h"
 #include "cliente.h"
 #include "utilidades.h"
@@ -13,29 +14,48 @@
 // (el servidor ya creo shm y semaforos)
 // ──────────────────────────────────────────
 
-static InventarioShm *shm   = NULL;
+static InventarioShm *Ishm   = NULL;
+static usuarioShm *Ushm   = NULL;
 static int            semID = -1;
 static int            shmID = -1;
+static int            shmID2 = -1;
+
 
 int conectarServidor() {
     FILE *f = fopen(ARCHIVO_IPC, "a");
     if (f) fclose(f);
 
     key_t keyShm = ftok(ARCHIVO_IPC, 'M');
+    key_t keyShm_usr = ftok(ARCHIVO_IPC, 'U');
     key_t keySem = ftok(ARCHIVO_IPC, 'S');
     if (keyShm == -1 || keySem == -1) {
         perror("ftok");
         return 0;
     }
 
+    //Inventario
     shmID = shmget(keyShm, sizeof(InventarioShm), PERMISOS);
     if (shmID == -1) {
         perror("shmget — asegurate de que el servidor este corriendo");
         return 0;
     }
 
-    shm = (InventarioShm *) shmat(shmID, NULL, 0);
-    if (shm == (void *) -1) {
+    Ishm = (InventarioShm *) shmat(shmID, NULL, 0);
+    if (Ishm == (void *) -1) {
+        perror("shmat");
+        return 0;
+    }
+
+    //Usuarios
+
+    shmID2 = shmget(keyShm_usr, sizeof(usuarioShm), PERMISOS);
+    if (shmID2 == -1) {
+        perror("shmget — asegurate de que el servidor este corriendo");
+        return 0;
+    }
+
+    Ushm = (usuarioShm *) shmat(shmID2, NULL, 0);
+    if (Ushm == (void *) -1) {
         perror("shmat");
         return 0;
     }
@@ -50,7 +70,10 @@ int conectarServidor() {
 }
 
 void desconectarServidor() {
-    if (shm) shmdt(shm);
+    if (Ishm&&Ushm){
+      shmdt(Ishm);  
+      shmdt(Ushm);
+    } 
 }
 
 // ──────────────────────────────────────────
@@ -58,29 +81,29 @@ void desconectarServidor() {
 //    Sustituye: //insertar catalogo de memoria compartida a lista
 // ──────────────────────────────────────────
 
-void cargarCatalogo(lista cat) {
+void cargarCatalogo(listaarticulo cat) {
 
-    if (!shm) {
+    if (!Ishm) {
         printf("DEBUG: shm es NULL\n");
         return;
     }
-    printf("DEBUG: totalProductos = %d\n", shm->totalProductos);
+    printf("DEBUG: totalProductos = %d\n", Ishm->totalProductos);
 
     downSem(semID, SEM_INV);
 
-    for (int i = 0; i < shm->totalProductos; i++) {
-        Producto *p = &shm->productos[i];
+    for (int i = 0; i < Ishm->totalProductos; i++) {
+        Producto *p = &Ishm->productos[i];
 
         if (!p->activo || p->existencias <= 0)
             continue;
 
-        info item;
+        infoarticulo item;
         strncpy(item.producto, p->nombre, sizeof(item.producto) - 1);
         item.producto[sizeof(item.producto) - 1] = '\0';
         item.cantidad = p->existencias;
         item.precio   = p->precio;
 
-        add(cat->NE, item, cat);
+        addarticulo(cat->NE, item, cat);
     }
 
     upSem(semID, SEM_INV);
@@ -92,12 +115,12 @@ void cargarCatalogo(lista cat) {
 // ──────────────────────────────────────────
 
 void actualizarExistencias(const char *nombreProducto, int cantidadVendida) {
-    if (!shm) return;
+    if (!Ishm) return;
 
     downSem(semID, SEM_INV);
 
-    for (int i = 0; i < shm->totalProductos; i++) {
-        Producto *p = &shm->productos[i];
+    for (int i = 0; i < Ishm->totalProductos; i++) {
+        Producto *p = &Ishm->productos[i];
 
         if (p->activo && strcmp(p->nombre, nombreProducto) == 0) {
             p->existencias -= cantidadVendida;
@@ -120,25 +143,33 @@ void actualizarExistencias(const char *nombreProducto, int cantidadVendida) {
 // ──────────────────────────────────────────
 
 void registrarVenta(float total, const char *usr) {
-    if (!shm) return;
+    if (!Ishm) return;
+
+    time_t t = time(NULL);
+    struct tm *tm_info = localtime(&t);
+    char fecha[20];
+    strftime(fecha, sizeof(fecha), "%d/%m/%Y %H:%M", tm_info);
+
 
     downSem(semID, SEM_INV);
 
-    if (shm->totalVentas < MAX_VENTAS) {
+    if (Ishm->totalVentas < MAX_VENTAS) {
         Venta v;
         v.total = total;
-        strncpy(v.usr, usr, sizeof(v.usr) - 1);
-        v.usr[sizeof(v.usr) - 1] = '\0';
+        strncpy(v.usr,   usr,   sizeof(v.usr)   - 1);
+        strncpy(v.fecha, fecha, sizeof(v.fecha) - 1);
+        v.usr[sizeof(v.usr)     - 1] = '\0';
+        v.fecha[sizeof(v.fecha) - 1] = '\0';
 
-        shm->ventas[shm->totalVentas] = v;
-        shm->totalVentas++;
+        Ishm->ventas[Ishm->totalVentas] = v;
+        Ishm->totalVentas++;
     }
 
     upSem(semID, SEM_INV);
 
     FILE *f = fopen("ventas.txt", "a");
     if (f) {
-        fprintf(f, "%s,%.2f\n", usr, total);
+        fprintf(f, "%s,%.2f,%s\n", usr, total, fecha);
         fclose(f);
     }
 
@@ -148,12 +179,12 @@ void registrarVenta(float total, const char *usr) {
 }
 
 void devolverExistencias(const char *nombreProducto, int cantidad) {
-    if (!shm) return;
+    if (!Ishm) return;
 
     downSem(semID, SEM_INV);
 
-    for (int i = 0; i < shm->totalProductos; i++) {
-        Producto *p = &shm->productos[i];
+    for (int i = 0; i < Ishm->totalProductos; i++) {
+        Producto *p = &Ishm->productos[i];
         if (p->activo && strcmp(p->nombre, nombreProducto) == 0) {
             p->existencias += cantidad;
             break;
@@ -164,4 +195,8 @@ void devolverExistencias(const char *nombreProducto, int cantidad) {
 
     upSem(semID, SEM_REQ);
     downSem(semID, SEM_ACK);
+}
+
+int BuscarCorreo(char *correo){
+    return 0;
 }

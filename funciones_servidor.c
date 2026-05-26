@@ -4,6 +4,7 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <sys/sem.h>
+#include "cliente.h"
 #include "inventario.h"
 #include "utilidades.h"
 
@@ -160,4 +161,70 @@ int venderProducto(InventarioShm *shm, int id, int cantidad, const char *usr) {
     }
 
     return 1;
+}
+
+
+// ──────────────────────────────────────────
+// ARCHIVO DE USUARIOS
+// ──────────────────────────────────────────
+
+int guardarUsuarios(usuarioShm *shm) {
+    // GUARDAR EN ARCHIVO TEMPORAL SIN ENCRIPTAR
+    FILE *f = fopen("usuarios.tmp", "wb");
+    if (!f) {
+        perror("guardarUsuarios: fopen");
+        return 0;
+    }
+
+    fwrite(shm, sizeof(usuarioShm), 1, f);
+    fclose(f);
+
+    // ENCRIPTAR Y GUARDAR COMO ARCHIVO FINAL
+    encriptar("usuarios.tmp", ARCHIVO_INV);
+    remove("usuarios.tmp");
+
+    return 1;
+}
+
+int cargarUsuarios(InventarioShm *shm) {
+    FILE *f = fopen(ARCHIVO_INV, "rb");
+    if (!f) {
+        // NO EXISTE EL ARCHIVO, INVENTARIO VACIO
+        shm->totalProductos = 0;
+        shm->totalVentas    = 0;
+        return 0;
+    }
+    fclose(f);
+
+    // DESENCRIPTAR A ARCHIVO TEMPORAL
+    desencriptar(ARCHIVO_INV, "usuarios.tmp");
+
+    f = fopen("usuarios.tmp", "rb");
+    if (!f) {
+        perror("cargarUsuarios: fopen tmp");
+        return 0;
+    }
+
+    fread(shm, sizeof(usuarioShm), 1, f);
+    fclose(f);
+    remove("usuarios.tmp");
+
+    return 1;
+}
+
+// ──────────────────────────────────────────
+// CRUD USUARIOS
+// ──────────────────────────────────────────
+
+int BuscarCorreo(usuarioShm *shm, char *correo){
+    return 0;
+}
+int BuscarUsuario(usuarioShm *shm, char *usr){
+    return 0;
+}
+int RegistrarUsuario(usuarioShm *shm,char *arch){
+    return 0;
+}
+int EliminarUsuario(InventarioShm *shm, int id) {
+    return 0;
 }

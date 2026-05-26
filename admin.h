@@ -1,7 +1,8 @@
 #ifndef ADMIN_H
 #define ADMIN_H
+#include "utilidades.h"
 
-typedef struct user
+typedef struct ad
 {
     char nombre[100];
     char apellido[100];
@@ -73,8 +74,7 @@ typedef struct Cabventa {
 
 typedef  cabecera * lista;
 typedef  NODO * enlace;
-typedef  enum men { NO_MEMORY , OKE , INDEXOUTOFBOUND, EMPTY } mensaje;
-typedef  enum b { FALSO , TRU } booleano;
+
 
 typedef  cabecerap * listaproducto;
 typedef  NODOP * enlaceproducto;
@@ -98,6 +98,7 @@ void hash(char *input, char *output);
 
 int SolicitarSesion(admin a);
 void ImprimirCentrado(int fila, const char *texto);
+void cargarVentasPorRango(listaventa lv, int dias);
 void menu();
 void iniciarSesion();
 void MenuPrincipal(char *usuario);
@@ -106,6 +107,7 @@ void AdministrarCatalogo();
 void GenerarReportes();
 int RegistrarUsuario(admin a, char *arch);
 int ModificarAtributo(admin a, char *usr);
+int BorrarUsuario(admin a, char *usr);
 int ModificarAtributoCatalogo(admin u, char *producto);
 int VerificarCorreo(char *correo);
 int BuscarCorreo(char *correo);

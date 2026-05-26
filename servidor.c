@@ -6,6 +6,7 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <sys/sem.h>
+#include "cliente.h"
 #include "inventario.h"
 #include "admin.h"
 
@@ -52,6 +53,7 @@ int main() {
 
     // GENERAR LLAVES IPC
     key_t keyShm = ftok(ARCHIVO_IPC, 'M');
+    key_t keyShm_usr = ftok(ARCHIVO_IPC, 'U');
     key_t keySem = ftok(ARCHIVO_IPC, 'S');
     if (keyShm == -1 || keySem == -1) {
         perror("ftok");
@@ -59,21 +61,36 @@ int main() {
     }
 
     // CREAR MEMORIA COMPARTIDA
+        //INVENTARIO
     int shmID = shmget(keyShm, sizeof(InventarioShm), IPC_CREAT | PERMISOS);
     if (shmID == -1) {
         perror("shmget");
         exit(1);
     }
 
-    InventarioShm *shm = (InventarioShm *) shmat(shmID, NULL, 0);
-    if (shm == (void *) -1) {
+    InventarioShm *Ishm = (InventarioShm *) shmat(shmID, NULL, 0);
+    if (Ishm == (void *) -1) {
         perror("shmat");
         exit(1);
     }
 
+        //USUARIOS
+    int shmID2 = shmget(keyShm_usr, sizeof(usuarioShm), IPC_CREAT | PERMISOS);
+    if (shmID2 == -1) {
+        perror("shmget");
+        exit(1);
+    }
+
+    usuarioShm *Ushm = (usuarioShm *) shmat(shmID2, NULL, 0);
+    if (Ushm == (void *) -1) {
+        perror("shmat");
+        exit(1);
+    }
+
+
     // CARGAR INVENTARIO DESDE ARCHIVO (si existe)
-    if (cargarInventario(shm))
-        printf("[SERVIDOR] Inventario cargado: %d productos.\n", shm->totalProductos);
+    if (cargarInventario(Ishm))
+        printf("[SERVIDOR] Inventario cargado: %d productos.\n", Ishm->totalProductos);
     else
         printf("[SERVIDOR] Inventario nuevo.\n");
 
@@ -104,7 +121,7 @@ int main() {
 
         // CREAR HILO PARA ATENDER
         pthread_t hilo;
-        ArgsHilo args = {semID, shm};
+        ArgsHilo args = {semID, Ishm};
 
         if (pthread_create(&hilo, NULL, atenderPeticion, &args) != 0) {
             perror("pthread_create");
@@ -115,12 +132,13 @@ int main() {
 
         // GUARDAR INVENTARIO ACTUALIZADO EN ARCHIVO
         downSem(semID, SEM_INV);
-        guardarInventario(shm);
+        guardarInventario(Ishm);
         upSem(semID, SEM_INV);
     }
 
     // LIMPIEZA (no se llega aqui en condiciones normales)
-    shmdt(shm);
+    shmdt(Ishm);
+    shmdt(Ushm);
     shmctl(shmID, IPC_RMID, 0);
     semctl(semID, 0, IPC_RMID);
 

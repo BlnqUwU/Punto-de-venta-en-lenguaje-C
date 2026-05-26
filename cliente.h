@@ -1,5 +1,6 @@
 #ifndef CLIENTE_H
 #define CLIENTE_H
+#include "utilidades.h"
 
 //se define el tipo de dato usuario
 typedef struct user
@@ -12,45 +13,48 @@ typedef struct user
 } usuario;
 
 //define el contenido de un elemento de la lista
-typedef struct informacion {
+typedef struct informacionarticulo {
 
     char producto[100];
     int cantidad;
     float precio;
 
-} info;
+} infoarticulo;
 
 //guarda el contenido de la lista e indica que elemento sigue y cual esta antes
-typedef struct nodo {
 
-    info Inf;
-    struct nodo * sig;
-    struct nodo * ant;
-
-} NODO;
+typedef struct nodoarticulo {
+    infoarticulo Inf;
+    struct nodoarticulo * sig;
+    struct nodoarticulo * ant;
+} NODOARTICULO;
 
 //indica el numero de elementos en la lista, el inicio y el final de esta
-typedef struct Cab {
-    NODO * I;
-    NODO * F;
+
+typedef struct Cabarticulo {
+    NODOARTICULO * I;
+    NODOARTICULO * F;
     int NE;
-} cabecera;
+} cabecera_articulo;
+
+typedef struct memoriacompartida{
+    usuario u;
+} usuarioShm;
 
 //alias para la lista
-typedef  cabecera * lista;
-typedef  NODO * enlace;
-typedef  enum men { NO_MEMORY , OKE , INDEXOUTOFBOUND, EMPTY } mensaje;
-typedef  enum b { FALSO , TRU } booleano;
+
+typedef cabecera_articulo * listaarticulo;
+typedef NODOARTICULO * enlacearticulo;
+
 
 
 //prototipos de funciones
 int VerificarCorreo(char *correo);
-int BuscarCorreo(char *correo);
-int BuscarUsuario(char *usr);
-int BuscarPassword(char *pass);
-int RegistrarUsuario(usuario u,char *arch);
-int SolicitarSesion(usuario u);
-int ComprobarPassword(char *pass);
+//int BuscarCorreo(char *correo);
+//int BuscarUsuario(char *usr);
+//int RegistrarUsuario(usuario u,char *arch);
+//int SolicitarSesion(usuario u);
+//int ComprobarPassword(char *pass);
 void hash(char *input, char *output);
 void registrar();
 void iniciarSesion();
@@ -60,18 +64,17 @@ void Catalogo(char *usuario);
 void Carrito(char *usuario);
 int Perfil(char *usuario);
 void ImprimirCentrado(int fila, const char *texto);
-usuario SolicitarPerfil(char *usr);
-int ModificarAtributo(usuario u, char *usr);
+//usuario SolicitarPerfil(char *usr);
+//int ModificarAtributo(usuario u, char *usr);
 
 //lista doblemente enlazada
-info get ( int pos , lista l );
-enlace ubicar ( int pos , lista l );
-mensaje add ( int pos, info E , lista l );
-mensaje borrar (  int Pos , lista l );
-booleano empty ( lista l  );
-mensaje set ( int Pos ,  info E , lista l);
-mensaje  crearlista( lista * l );
-void  liberarlista( lista * l );
-void Vaciarlista( lista l );
-
+infoarticulo getarticulo ( int pos , listaarticulo l );  
+enlacearticulo ubicararticulo ( int pos , listaarticulo l );                                        
+mensaje addarticulo ( int pos, infoarticulo E , listaarticulo l );         
+mensaje borrararticulo ( int Pos , listaarticulo l );                   
+booleano emptyarticulo ( listaarticulo l );
+mensaje setarticulo ( int Pos , infoarticulo E , listaarticulo l);      
+mensaje crearlistaarticulo( listaarticulo * l ); 
+void liberarlistaarticulo( listaarticulo * l );  
+void Vaciarlistaarticulo( listaarticulo l ); 
 #endif
