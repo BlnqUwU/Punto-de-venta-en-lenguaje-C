@@ -33,6 +33,7 @@ typedef struct {
 typedef struct {
     float total;
     char  usr[100];
+    char fecha[20]; // DD/MM/YYYY HH:MM
 } Venta;
 
 typedef struct {

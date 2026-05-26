@@ -8,7 +8,6 @@
 #include <sys/shm.h>
 #include <sys/sem.h>
 #include "inventario.h"
-#include "admin.h"
 
 // ──────────────────────────────────────────
 // ARGUMENTOS PARA HILO DE CLIENTE
@@ -47,9 +46,6 @@ int main() {
     // CREAR ARCHIVO BASE PARA FTOK SI NO EXISTE
     FILE *f = fopen(ARCHIVO_IPC, "a");
     if (f) fclose(f);
-
-    // CREAR ADMIN POR DEFECTO SI NO EXISTE
-    crearAdminSiNoExiste();
 
     // GENERAR LLAVES IPC
     key_t keyShm = ftok(ARCHIVO_IPC, 'M');

@@ -604,10 +604,12 @@ void GenerarReportes(){
         "Generar reporte mensual",
         "Salir"
     };
+
+    listaventa ventadiaria;
+    crearlistaventa(&ventadiaria);
+
     listaventa ventasemanal;
     crearlistaventa(&ventasemanal);
-
-
 
     listaventa ventamensual;
     crearlistaventa(&ventamensual);
@@ -656,14 +658,18 @@ void GenerarReportes(){
 
                 switch (opcion) {
                     case 0://reporte diario
-                        VentaDiaria();
+                        Vaciarlistaventa(ventadiaria);
+                        cargarVentasPorRango(ventadiaria, 1);
+                        ventas(ventadiaria);
                         break;
                     case 1://reporte semanal
-                        //pasar venta semanal de mem compartida a lista
+                        Vaciarlistaventa(ventasemanal);
+                        cargarVentasPorRango(ventasemanal, 7);
                         ventas(ventasemanal);
                         break;
                     case 2://reporte mensual
-                        //pasar venta mensual de mem compartida a lista
+                        Vaciarlistaventa(ventamensual);
+                        cargarVentasPorRango(ventamensual, 30);
                         ventas(ventamensual);
                         break;
                     case 3:
@@ -673,11 +679,13 @@ void GenerarReportes(){
                 }
                 break;
             case 27:
-            liberarlistaventa(&ventasemanal);
-            liberarlistaventa(&ventamensual);
+                liberarlistaventa(&ventadiaria);
+                liberarlistaventa(&ventasemanal);
+                liberarlistaventa(&ventamensual);
             return;
         }
     }
+    liberarlistaventa(&ventadiaria);
     liberarlistaventa(&ventasemanal);
     liberarlistaventa(&ventamensual);
     return;

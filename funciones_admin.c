@@ -2,6 +2,7 @@
 #include <string.h>
 #include <ncurses.h>
 #include <stdlib.h>
+#include <time.h>
 #include "admin.h"
 
 #define ARCHIVO_ADMINS "admins.txt"
@@ -310,8 +311,49 @@ int BuscarProducto(char *producto) {
 }
 
 // ──────────────────────────────────────────
-// LISTAS ENLAZADAS — USUARIOS
+// CARGAR VENTAS POR RANGO DE DIAS
+// dias=1 diario, dias=7 semanal, dias=30 mensual
 // ──────────────────────────────────────────
+
+void cargarVentasPorRango(listaventa lv, int dias) {
+    FILE *f = fopen("ventas.txt", "r");
+    if (!f) return;
+
+    time_t ahora = time(NULL);
+    char linea[200];
+    int cont = 0;
+
+    while (fgets(linea, sizeof(linea), f)) {
+        char usr[100], fecha[20];
+        float total;
+
+        // formato: usr,total,DD/MM/YYYY HH:MM
+        sscanf(linea, "%[^,],%f,%[^\n]", usr, &total, fecha);
+
+        // parsear fecha
+        struct tm tm_venta = {0};
+        sscanf(fecha, "%d/%d/%d %d:%d",
+               &tm_venta.tm_mday, &tm_venta.tm_mon,
+               &tm_venta.tm_year, &tm_venta.tm_hour, &tm_venta.tm_min);
+        tm_venta.tm_mon  -= 1;    // tm_mon va de 0-11
+        tm_venta.tm_year -= 1900; // tm_year desde 1900
+        tm_venta.tm_isdst = -1;
+
+        time_t t_venta = mktime(&tm_venta);
+        double diff = difftime(ahora, t_venta);
+
+        // filtrar por rango en segundos
+        if (diff >= 0 && diff <= dias * 86400.0) {
+            infoventa iv;
+            iv.v.total = total;
+            strncpy(iv.v.fecha, fecha, sizeof(iv.v.fecha) - 1);
+            iv.v.fecha[sizeof(iv.v.fecha) - 1] = '\0';
+            addventa(cont, iv, lv);
+            cont++;
+        }
+    }
+    fclose(f);
+}
 
 info get(int pos, lista l) {
     info copia;

@@ -5,6 +5,7 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <sys/sem.h>
+#include <time.h>
 #include "inventario.h"
 #include "cliente.h"
 #include "utilidades.h"
@@ -117,19 +118,26 @@ void actualizarExistencias(const char *nombreProducto, int cantidadVendida) {
 
 // ──────────────────────────────────────────
 // 3. REGISTRAR VENTA EN SHM
-//    Sustituye: //mandar totalpagar a servidor para reporte de venta
 // ──────────────────────────────────────────
 
 void registrarVenta(float total, const char *usr) {
     if (!shm) return;
+
+    // OBTENER FECHA ACTUAL
+    time_t t = time(NULL);
+    struct tm *tm_info = localtime(&t);
+    char fecha[20];
+    strftime(fecha, sizeof(fecha), "%d/%m/%Y %H:%M", tm_info);
 
     downSem(semID, SEM_INV);
 
     if (shm->totalVentas < MAX_VENTAS) {
         Venta v;
         v.total = total;
-        strncpy(v.usr, usr, sizeof(v.usr) - 1);
-        v.usr[sizeof(v.usr) - 1] = '\0';
+        strncpy(v.usr,   usr,   sizeof(v.usr)   - 1);
+        strncpy(v.fecha, fecha, sizeof(v.fecha) - 1);
+        v.usr[sizeof(v.usr)     - 1] = '\0';
+        v.fecha[sizeof(v.fecha) - 1] = '\0';
 
         shm->ventas[shm->totalVentas] = v;
         shm->totalVentas++;
@@ -137,9 +145,10 @@ void registrarVenta(float total, const char *usr) {
 
     upSem(semID, SEM_INV);
 
+    // GUARDAR EN ARCHIVO HISTORICO DE VENTAS
     FILE *f = fopen("ventas.txt", "a");
     if (f) {
-        fprintf(f, "%s,%.2f\n", usr, total);
+        fprintf(f, "%s,%.2f,%s\n", usr, total, fecha);
         fclose(f);
     }
 
@@ -147,6 +156,7 @@ void registrarVenta(float total, const char *usr) {
     upSem(semID, SEM_REQ);
     downSem(semID, SEM_ACK);
 }
+
 
 void devolverExistencias(const char *nombreProducto, int cantidad) {
     if (!shm) return;

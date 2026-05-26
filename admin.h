@@ -98,6 +98,7 @@ void hash(char *input, char *output);
 
 int SolicitarSesion(admin a);
 void ImprimirCentrado(int fila, const char *texto);
+void cargarVentasPorRango(listaventa lv, int dias);
 void menu();
 void iniciarSesion();
 void MenuPrincipal(char *usuario);
