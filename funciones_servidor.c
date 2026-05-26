@@ -5,6 +5,7 @@
 #include <sys/shm.h>
 #include <sys/sem.h>
 #include "inventario.h"
+#include "utilidades.h"
 
 // ──────────────────────────────────────────
 // ENCRIPTACION XOR
