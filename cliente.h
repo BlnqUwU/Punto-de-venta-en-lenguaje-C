@@ -1,6 +1,7 @@
 #ifndef CLIENTE_H
 #define CLIENTE_H
 #include "utilidades.h"
+#define MAX_USUARIOS  60
 
 //se define el tipo de dato usuario
 typedef struct user
@@ -10,6 +11,8 @@ typedef struct user
     char correo[100];
     char usr[100];
     char pass[100];
+    int activo;
+    int id;
 } usuario;
 
 //define el contenido de un elemento de la lista
@@ -38,7 +41,9 @@ typedef struct Cabarticulo {
 } cabecera_articulo;
 
 typedef struct memoriacompartida{
-    usuario u;
+    usuario u [MAX_USUARIOS];
+    int totalusuarios;
+
 } usuarioShm;
 
 //alias para la lista

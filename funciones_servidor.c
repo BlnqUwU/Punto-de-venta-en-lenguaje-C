@@ -6,7 +6,6 @@
 #include <sys/sem.h>
 #include "cliente.h"
 #include "inventario.h"
-#include "utilidades.h"
 
 // ──────────────────────────────────────────
 // ENCRIPTACION XOR
@@ -186,12 +185,11 @@ int guardarUsuarios(usuarioShm *shm) {
     return 1;
 }
 
-int cargarUsuarios(InventarioShm *shm) {
+int cargarUsuarios(usuarioShm *shm) {
     FILE *f = fopen(ARCHIVO_INV, "rb");
     if (!f) {
         // NO EXISTE EL ARCHIVO, INVENTARIO VACIO
-        shm->totalProductos = 0;
-        shm->totalVentas    = 0;
+        shm->totalusuarios = 0;
         return 0;
     }
     fclose(f);
@@ -216,15 +214,61 @@ int cargarUsuarios(InventarioShm *shm) {
 // CRUD USUARIOS
 // ──────────────────────────────────────────
 
-int BuscarCorreo(usuarioShm *shm, char *correo){
-    return 0;
+int BuscarCorreo(usuarioShm *shm){
+    for (int i = 0; i < shm->totalusuarios; i++) {
+        for(int j=0; j< shm->totalusuarios; i++) {
+        if (strcmp(shm->u[i].correo, shm->u[j].correo)==0)
+            return 1;   // retorna 1 si existe
+        }
+    }
+    return -1;  // no encontrado
 }
-int BuscarUsuario(usuarioShm *shm, char *usr){
-    return 0;
+int BuscarUsuario(usuarioShm *shm){
+    for (int i = 0; i < shm->totalusuarios; i++) {
+        for(int j=0; j< shm->totalusuarios; i++) {
+        if (strcmp(shm->u[i].usr, shm->u[j].usr)==0)
+            return i;   // retorna 1 si existe
+        }
+    }
+    return -1;  // no encontrado
 }
-int RegistrarUsuario(usuarioShm *shm,char *arch){
-    return 0;
+int RegistrarUsuario(usuarioShm *shm, usuario u){
+    if (shm->totalusuarios >= MAX_PRODUCTOS)
+        return 0;   // inventario lleno
+
+    // GENERAR ID UNICO (el mayor id existente + 1)
+    int maxId = 0;
+    for (int i = 0; i < shm->totalusuarios; i++) {
+        if (shm->u[i].activo && shm->u[i].id > maxId)
+            maxId = shm->u[i].id;
+    }
+
+    u.id     = maxId + 1;
+    u.activo = 1;
+
+    shm->u[shm->totalusuarios] = u;
+    shm->totalusuarios++;
+
+    return 1;
 }
-int EliminarUsuario(InventarioShm *shm, int id) {
-    return 0;
+int EliminarUsuario(usuarioShm *shm) {
+    int idx = BuscarUsuario(shm);
+    if (idx == -1)
+        return 0;   // no existe
+
+    shm->u[idx].activo = 0;
+    return 1;
+}
+
+int modificarUsuario(usuarioShm *shm, usuario nuevo) {
+    int idx = BuscarUsuario(shm);
+    if (idx == -1)
+        return 0;
+
+    // CONSERVAR ID Y ESTADO ACTIVO
+    nuevo.id     = shm->u->id;
+    nuevo.activo = 1;
+
+    shm->u[idx] = nuevo;
+    return 1;
 }
