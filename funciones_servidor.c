@@ -211,20 +211,3 @@ int cargarUsuarios(InventarioShm *shm) {
 
     return 1;
 }
-
-// ──────────────────────────────────────────
-// CRUD USUARIOS
-// ──────────────────────────────────────────
-
-int BuscarCorreo(usuarioShm *shm, char *correo){
-    return 0;
-}
-int BuscarUsuario(usuarioShm *shm, char *usr){
-    return 0;
-}
-int RegistrarUsuario(usuarioShm *shm,char *arch){
-    return 0;
-}
-int EliminarUsuario(InventarioShm *shm, int id) {
-    return 0;
-}

@@ -196,7 +196,19 @@ void devolverExistencias(const char *nombreProducto, int cantidad) {
     upSem(semID, SEM_REQ);
     downSem(semID, SEM_ACK);
 }
-
-int BuscarCorreo(char *correo){
+int cargarUsuario(usuario u) {
+    char linea[200];
+    FILE *archivo = fopen("usuarios.txt", "r");
+    if (archivo == NULL) return 0;
+    while (fgets(linea, sizeof(linea), archivo)) {
+        char nombre[50], apellido[50], correo[50], usr[50], pass[100];
+        sscanf(linea, "%[^,],%[^,],%[^,],%[^,],%[^,\n]",
+               nombre, apellido, correo, usr, pass);
+        if(strcmp(usr, u.usr) == 0 && strcmp(pass, u.pass) == 0) {
+            fclose(archivo);
+            return 1;
+        }
+    }
+    fclose(archivo);
     return 0;
 }

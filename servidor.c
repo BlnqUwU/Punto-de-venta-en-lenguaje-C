@@ -48,9 +48,6 @@ int main() {
     FILE *f = fopen(ARCHIVO_IPC, "a");
     if (f) fclose(f);
 
-    // CREAR ADMIN POR DEFECTO SI NO EXISTE
-    crearAdminSiNoExiste();
-
     // GENERAR LLAVES IPC
     key_t keyShm = ftok(ARCHIVO_IPC, 'M');
     key_t keyShm_usr = ftok(ARCHIVO_IPC, 'U');
