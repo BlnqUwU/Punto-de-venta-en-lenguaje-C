@@ -3,23 +3,20 @@
 #include <string.h>
 #include <unistd.h>
 #include "cliente.h"
+#include "cliente_backend.h"
 
+lista carritoGlobal;
 
 void Carrito(char *usuario){
     int opcion = 0;
     int tecla,tecla2;
     
 
-    lista carrito;
-    crearlista(&carrito);
     char *menu[] = {
         "Pagar Carrito",
         "Salir"
     };
     int m= sizeof(menu)/sizeof(menu[0]);
-
-    
-    //insertar lista de compra de memoria compartida a lista
     
     lista cat;
     crearlista(&cat);
@@ -34,7 +31,7 @@ void Carrito(char *usuario){
     while(1) {
         curs_set(0);
         clear();
-        int n=carrito->NE;
+        int n=carritoGlobal->NE;
         int salir=0;
         float totalpagar=0;
         
@@ -57,10 +54,10 @@ void Carrito(char *usuario){
             pos = 0;
         }
 
-        if(!empty(carrito)){ //verifica si el carrito esta vacio
+        if(!empty(carritoGlobal)){ //verifica si el carrito esta vacio
             //imprime el carrito
         for (int i = pos; i < n && (i - pos) < 30; i++) {
-            info ac = get(i, carrito);
+            info ac = get(i, carritoGlobal);
             int fila = (LINES / 2) - (30 / 2) + (i - pos);
 
             move(fila, 0);
@@ -78,8 +75,8 @@ void Carrito(char *usuario){
             attroff(A_REVERSE);
         }
         //calcula el total a pagar del carrito
-        for(int i=0; i<carrito->NE; i++){
-            auxtotal=get(i,carrito);
+        for(int i=0; i<carritoGlobal->NE; i++){
+            auxtotal=get(i,carritoGlobal);
             totalpagar+=auxtotal.precio*auxtotal.cantidad;
         }
         
@@ -117,7 +114,6 @@ void Carrito(char *usuario){
 
             case 10: // ENTER
                 if(opcion==n+1){ //salir seleccionado
-                    liberarlista(&carrito);
                     liberarlista(&cat);
                     return;
                 }else if(opcion==n){ //pagar carrito seleccionado
@@ -125,9 +121,10 @@ void Carrito(char *usuario){
                     clear();
 
                     //mandar totalpagar a servidor para reporte de venta
+                    registrarVenta(totalpagar, usuario);
 
-                    if(!empty(carrito)){ //verifica si el carrito esta vacio
-                        Vaciarlista(carrito); //elimina los elementos del carrito
+                    if(!empty(carritoGlobal)){ //verifica si el carrito esta vacio
+                        Vaciarlista(carritoGlobal); //elimina los elementos del carrito
                         ImprimirCentrado(LINES/2, "Carrito pagado con exito.");
                         getch();
                         opcion=0;
@@ -139,7 +136,7 @@ void Carrito(char *usuario){
                     }
                     
                 }else{ //cualquier elemento del carrito elegido
-                    elegido= get(opcion,carrito);
+                    elegido= get(opcion,carritoGlobal);
                     curs_set(0);
                     clear();
                     mvprintw(LINES/2, (COLS/2)-strlen("Cuantas unidades de  desea quitar del carrito?: "), 
@@ -151,7 +148,7 @@ void Carrito(char *usuario){
                     while(!salir){
                         move((LINES/2),(COLS/2)+strlen("Cuantas unidades de  desea quitar del carrito?: "));
                         clrtoeol();
-                        mvprintw((LINES/2), ((COLS/2)+strlen("Cuantas unidades de  desea quitar del carrito?: ")) -25, "%d", cantidad);//posible error de escritura (revisar estando mas conciente)
+                        mvprintw((LINES/2), ((COLS/2)+strlen("Cuantas unidades de  desea quitar del carrito?: ")) -25, "%d", cantidad);
                         tecla2=getch();
                         switch(tecla2) {
                             case KEY_UP:
@@ -167,17 +164,18 @@ void Carrito(char *usuario){
                             case 10:
                                 elegido.cantidad=elegido.cantidad-cantidad;
                                 if(elegido.cantidad==0){ //si se quita toda la cantidad del carrito entonces lo quita del carrito y lo añade al catalogo
-                                    borrar(opcion, carrito);
+                                    borrar(opcion, carritoGlobal);
                                     add(opcion,elegido,cat);
+                                    devolverExistencias(elegido.producto, cantidad); // ← falta
                                 }else { 
-                                    set(opcion, elegido, carrito);//actualiza la cantidad de elementos del producto en el carrito
+                                    set(opcion, elegido, carritoGlobal);//actualiza la cantidad de elementos del producto en el carrito
+                                    devolverExistencias(elegido.producto, cantidad);
 
                                 }
                             
                                 salir=1;
                             break;
                             case 27:// se preciono la tecla esc
-                                liberarlista(&carrito);
                                 liberarlista(&cat);
                                 endwin();
                             return;
@@ -187,7 +185,6 @@ void Carrito(char *usuario){
             break;
             
             case 27://se preciono la tecla esc
-            liberarlista(&carrito);
             liberarlista(&cat);
             endwin();
             
@@ -209,11 +206,9 @@ void Catalogo(char *usuario){
     int m= sizeof(menu)/sizeof(menu[0]);
 
      //insertar catalogo de memoria compartida a lista
-    info aux={"asdasdasdasdasdasd",1,10};
-    add(0,aux,cat);
+    cargarCatalogo(cat);
+    
     info elegido;
-    lista carrito;
-    crearlista(&carrito);
     set_escdelay(0);
     noecho();
     curs_set(0);
@@ -291,7 +286,6 @@ void Catalogo(char *usuario){
 
             case 10: // ENTER
                 if(opcion==n){//salir seleccionado
-                    liberarlista(&carrito);
                     liberarlista(&cat);
                     return;
                 }else{//cualquier elemento del catalogo seleccionado
@@ -305,9 +299,9 @@ void Catalogo(char *usuario){
                     int cantidad=0;
                     //seleccionar cuantos elementos agregar al carrito de compra desde el catalogo
                     while(!salir){
-                        move((LINES/2),(COLS/2));
+                        move((LINES/2),(COLS/2)+strlen("Cuantas unidades de  desea agregar al carrito?: "));
                         clrtoeol();
-                        mvprintw((LINES/2), ((COLS/2)+strlen("Cuantas unidades de  desea agregar al carrito?: ")+strlen(elegido.producto)) -25, "%d", cantidad);
+                        mvprintw((LINES/2), ((COLS/2)+strlen("Cuantas unidades de  desea agregar al carrito?: ")) -25, "%d", cantidad);
                         tecla2=getch();
                         switch(tecla2) {
                             case KEY_UP:
@@ -324,13 +318,13 @@ void Catalogo(char *usuario){
                                 elegido.cantidad=elegido.cantidad-cantidad;
                                 if(elegido.cantidad==0){//si se seleccionaron todos los elementos disponibles, lo borra del catalogo y lo añade al carrito
                                     borrar(opcion, cat);
-                                    add(carrito->NE,elegido,carrito);
+                                    add(carritoGlobal->NE,elegido,carritoGlobal);
                                 }else { //actualiza los elementos en el catalogo y añade la cantidad del producto seleccionado al carrito
                                     set(opcion, elegido, cat);
                                     //actualizar catalogo servidor
+                                    actualizarExistencias(elegido.producto, cantidad);
                                     elegido.cantidad=cantidad;
-                                    add(carrito->NE,elegido,carrito);
-                                    //añadir a carrito de compra servidor
+                                    add(carritoGlobal->NE,elegido,carritoGlobal);
                                 }
                             
                                 salir=1;
@@ -344,14 +338,12 @@ void Catalogo(char *usuario){
             break;
             
             case 27:
-            liberarlista(&carrito);
             liberarlista(&cat);
             endwin();
             
             return;
         }
     }
-    liberarlista(&carrito);
     liberarlista(&cat);
     return;
 }
@@ -1086,6 +1078,12 @@ void menu() {
 }
 
 int main() {
+    if (conectarServidor() == 0) {
+        return 1;
+    }
+    crearlista(&carritoGlobal);
     menu();
+    liberarlista(&carritoGlobal);
+    desconectarServidor();
     return 0;
 }
