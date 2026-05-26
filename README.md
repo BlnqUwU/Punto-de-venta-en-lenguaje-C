@@ -7,21 +7,30 @@ Punto de venta creado en lenguaje C utilizando procesos y las herramientas del I
 ## Instalación
 
 > [!NOTE]
-> Este repositorio necesita dependencias, antes de instalar instala:
+> Este repositorio necesita dependencias, antes de descargar, instala:
 > -  ncurses
 
 
 Ejecuta
 -   git clone https://github.com/BlnqUwU/Punto-de-venta-en-lenguaje-C
 -   cd Punto-de-venta-en-lenguaje-C/
--   make cliente
--   ./cliente
+-   make all
+-   ./servidor
+-   ./cliente o ./admin
 
 ## Changelog
 
+### V0.5
+-   Backend de cliente completo
+-   Servidor agregado
+-   Conexión mediante IPC agregada
+-   Agregadas nuevas reglas Make a "Makefile"
+-   Buscando más insectos para cazar
+-   Herobrine removed
+
 ### V0.4
--   Añadida vista de administrado
--   Añadida regla "make administrado" a Makefile
+-   Añadida vista de administrador
+-   Añadida regla "make admin" a Makefile
 -   Bug fixed en cliente?
 -   Herobrine removed
 
@@ -62,7 +71,7 @@ Ejecuta
 ## Créditos
 
 -   [@BlnqUwU](https://github.com/BlnqUwU)
--   Pollo
+-   [@Pollo1521](https://github.com/Pollo1521)
 
 
 
