@@ -5,6 +5,8 @@
 #include <threads.h>
 #include <unistd.h>
 #include "admin.h"
+#include "inventario.h"
+#include "utilidades.h"
 #include "admin_backend.h"
 
 void AgregarProducto(){

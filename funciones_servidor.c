@@ -6,6 +6,7 @@
 #include <sys/sem.h>
 #include "cliente.h"
 #include "inventario.h"
+#include "utilidades.h"
 
 // ──────────────────────────────────────────
 // ENCRIPTACION XOR
@@ -185,11 +186,12 @@ int guardarUsuarios(usuarioShm *shm) {
     return 1;
 }
 
-int cargarUsuarios(usuarioShm *shm) {
+int cargarUsuarios(InventarioShm *shm) {
     FILE *f = fopen(ARCHIVO_INV, "rb");
     if (!f) {
         // NO EXISTE EL ARCHIVO, INVENTARIO VACIO
-        shm->totalusuarios = 0;
+        shm->totalProductos = 0;
+        shm->totalVentas    = 0;
         return 0;
     }
     fclose(f);

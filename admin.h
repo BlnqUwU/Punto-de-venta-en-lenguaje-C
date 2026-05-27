@@ -1,7 +1,6 @@
 #ifndef ADMIN_H
 #define ADMIN_H
 #include "utilidades.h"
-#define MAX_USUARIOS  1
 
 typedef struct ad
 {
@@ -10,8 +9,6 @@ typedef struct ad
     char correo[100];
     char usr[100];
     char pass[100];
-    int activo;
-    int id;
 } admin;
 
 typedef struct product
@@ -28,8 +25,7 @@ typedef struct ventas
 } venta;
 
 typedef struct informacion {
-    admin a[1];
-    int totalusuarios;;
+    admin a;
 } info;
 
 typedef struct nodo {

@@ -200,7 +200,7 @@ lista ObtenerUsuarios() {
     while (fgets(linea, sizeof(linea), archivo)) {
         sscanf(linea, "%[^,],%[^,],%[^,],%[^,],%[^,\n]",
                user.nombre, user.apellido, user.correo, user.usr, user.pass);
-        usr.a[0] = user;
+        usr.a = user;
         add(cont, usr, usuarios);
         cont++;
     }
