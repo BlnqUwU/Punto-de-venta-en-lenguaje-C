@@ -1,19 +1,12 @@
-#include <ncurses.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <threads.h>
-#include <unistd.h>
 #include "admin.h"
-#include "inventario.h"
-#include "utilidades.h"
-#include "admin_backend.h"
+#include "listas.h"
+#include "memoria_compartida.h"
 
 void AgregarProducto(){
         set_escdelay(0);
     curs_set(0);
     keypad(stdscr, TRUE);
-    prod producto = {"",0,0};
+    articulo producto = {"",0,0};
     clear();
     echo();
     int opcion = 0;
@@ -31,12 +24,12 @@ void AgregarProducto(){
     };
     char pre[50];
     char cant[50];
-    sprintf(pre, "%.2f", producto.p.precio);
-    sprintf(cant, "%d", producto.p.cantidad);
+    sprintf(pre, "%.2f", producto.precio);
+    sprintf(cant, "%d", producto.cantidad);
     int n = sizeof(menu)/sizeof(menu[0]);
 
     char *DatosProducto[]={
-        producto.p.producto,
+        producto.producto,
         cant,
         pre
 
@@ -112,7 +105,7 @@ void AgregarProducto(){
                     if(BuscarProducto(aux2)||strcmp(aux2, "")==0||strcmp(aux2, " ")==0)
                         ver[0]=1;
                     else{
-                        strcpy(producto.p.producto, aux2);
+                        strcpy(producto.producto, aux2);
                         ver[0]=0;
                     }
                     noecho();
@@ -127,7 +120,7 @@ void AgregarProducto(){
                         ver[1]=1;
                     else{
                         sprintf(cant, "%d",cf);
-                        producto.p.cantidad=cf;
+                        producto.cantidad=cf;
                         ver[1]=0;
                     }
                     noecho();
@@ -142,13 +135,13 @@ void AgregarProducto(){
                         ver[2]=1;
                     else{
                         sprintf(pre, "%0.2f",pf);
-                        producto.p.precio=pf;
+                        producto.precio=pf;
                         ver[2]=0;
                     }
                     noecho();
                     break;
                     case 3://usuario seleccionado, no debe existir en la base de datos
-                    if(strcmp(producto.p.producto, "")==0||strcmp(producto.p.producto, " ")==0||producto.p.precio<=0||producto.p.cantidad<=0){
+                    if(strcmp(producto.producto, "")==0||strcmp(producto.producto, " ")==0||producto.precio<=0||producto.cantidad<=0){
 
                         ver[3]=1;
                         break;
@@ -195,10 +188,10 @@ void EditarUsuario(admin user){
     int n = sizeof(menu)/sizeof(menu[0]);
 
     char *DatosUsuario[]={
-        user.nombre,
-        user.apellido,
-        user.correo,
-        user.usr,
+        user->nombre,
+        user->apellido,
+        user->correo,
+        user->usr,
     };
 
     int l = sizeof(DatosUsuario)/sizeof(DatosUsuario[0]);
@@ -276,14 +269,14 @@ void EditarUsuario(admin user){
                     move((LINES/2),8+(COLS/2)-26);
                     clrtoeol();
                     echo();
-                    getstr (user.nombre);
+                    getstr (user->nombre);
                     noecho();
                     break;
                     case 1://apellido seleccionado, sin restriccion
                     move((LINES/2)+1,10+(COLS/2)-26);
                     clrtoeol();
                     echo();
-                    getstr (user.apellido);
+                    getstr (user->apellido);
                     noecho();
                     break;
                     case 2://correo seleccionado, debe contener @ y . despues del @, tambien no debe de existir en la base de datos
@@ -291,16 +284,16 @@ void EditarUsuario(admin user){
                     move((LINES/2)+2,8+(COLS/2)-26);
                     clrtoeol();
                     echo();
-                    getstr (user.correo);
+                    getstr (user->correo);
                     noecho();
-                    if (VerificarCorreo(user.correo) == 0){
+                    if (VerificarCorreo(user->correo) == 0){
                         move((LINES/2)+11, 0);
                         clrtoeol();
                         move((LINES/2)+12, 0);
-                        strcpy(user.correo, "");
+                        strcpy(user->correo, "");
                         clrtoeol();
                         cor=1;
-                    }else if (BuscarCorreo(user.correo) == 1) {
+                    }else if (BuscarCorreo(user->correo) == 1) {
                         move((LINES/2)+11, 0);
                         clrtoeol();
                         move((LINES/2)+12, 0);
@@ -308,8 +301,8 @@ void EditarUsuario(admin user){
                         move((LINES/2)+7,8+49);
                         clrtoeol();
                         cor=2;
-                        strcpy(aux0, user.correo);
-                        strcpy(user.correo, "");
+                        strcpy(aux0, user->correo);
+                        strcpy(user->correo, "");
                     }else {
                         move((LINES/2)+11, 0);
                         clrtoeol();
@@ -322,9 +315,9 @@ void EditarUsuario(admin user){
                     echo();
                     move((LINES/2)+3,9+(COLS/2)-26);
                     clrtoeol();
-                    getstr (user.usr);
+                    getstr (user->usr);
                     noecho();
-                    if (BuscarUsuario(user.usr) == 1) {
+                    if (BuscarUsuario(user->usr) == 1) {
                         move((LINES/2)+11, 0);
                         clrtoeol();
                         move((LINES/2)+12, 0);
@@ -332,8 +325,8 @@ void EditarUsuario(admin user){
                         move((LINES/2)+8,9+49);
                         clrtoeol();
                         us=1;
-                        strcpy(aux1, user.usr);
-                        strcpy(user.usr, "");
+                        strcpy(aux1, user->usr);
+                        strcpy(user->usr, "");
                     }else {
                         move((LINES/2)+11, 0);
                         clrtoeol();
@@ -346,7 +339,7 @@ void EditarUsuario(admin user){
                     curs_set(0);
                         clear();
                         //verifica que no halla datos sin llenar
-                        if((strcmp(user.pass, "")==0)||(strcmp(user.correo, "")==0)||(strcmp(user.usr, "")==0)||(strcmp(user.usr, " ")==0)||(strcmp(user.nombre, "")==0)){
+                        if((strcmp(user->pass, "")==0)||(strcmp(user->correo, "")==0)||(strcmp(user->usr, "")==0)||(strcmp(user->usr, " ")==0)||(strcmp(user->nombre, "")==0)){
                             mvprintw(3, 10, "Datos incompletos.");
                             getch();
                             clear();
@@ -399,8 +392,8 @@ void VentaDiaria(){
     int opcion = 0;
     int tecla,tecla2;
 
-    listaproducto cat;
-    crearlistaproducto(&cat);
+    listaarticulo cat;
+    crearlistaarticulo(&cat);
     char *menu[] = {
         "Salir"
     };
@@ -408,8 +401,8 @@ void VentaDiaria(){
 
     //insertar VENTA DIARIA  de memoria compartida a lista
 
-    cat=ObtenerProductos();
-    prod elegido;
+    //cat=ObtenerProductos();
+    articulo elegido;
     set_escdelay(0);
     noecho();
     curs_set(0);
@@ -419,6 +412,7 @@ void VentaDiaria(){
     while(1) {
         curs_set(0);
         clear();
+        //cat=ObtenerProductos();
         int n=cat->NE;
         int salir=0;
 
@@ -443,7 +437,7 @@ void VentaDiaria(){
         //imprime el catalogo
         for (int i = pos; i < n && (i - pos) < 30; i++) {
 
-            prod ac = getproducto(i, cat);
+            articulo ac = getarticulo(i, cat);
             int fila = (LINES / 2) - (30 / 2) + (i - pos);
 
             move(fila, 0);
@@ -452,10 +446,10 @@ void VentaDiaria(){
             if (i == opcion)
                 attron(A_REVERSE);
 
-            sprintf(pre, "%.2f", ac.p.precio);
-            sprintf(cant, "%d", ac.p.cantidad);
-            mvprintw(fila, 50 - strlen(ac.p.producto) / 2, "%s", ac.p.producto);
-            mvprintw(fila, 149 - strlen(pre) / 2, "$%.2f", ac.p.precio*ac.p.cantidad);
+            sprintf(pre, "%.2f", ac.precio);
+            sprintf(cant, "%d", ac.cantidad);
+            mvprintw(fila, 50 - strlen(ac.producto) / 2, "%s", ac.producto);
+            mvprintw(fila, 149 - strlen(pre) / 2, "$%.2f", ac.precio*ac.cantidad);
 
             attroff(A_REVERSE);
         }
@@ -516,7 +510,7 @@ void ventas(listaventa ventas){
     };
     int m= sizeof(menu)/sizeof(menu[0]);
 
-    prod elegido;
+    articulo elegido;
     set_escdelay(0);
     noecho();
     curs_set(0);
@@ -711,8 +705,8 @@ void AdministrarCatalogo(){
     int opcion = 0;
     int tecla,tecla2;
 
-    listaproducto cat;
-    crearlistaproducto(&cat);
+    listaarticulo cat;
+    crearlistaarticulo(&cat);
     char *menu[] = {
         "Agregar Producto",
         "Salir"
@@ -721,8 +715,8 @@ void AdministrarCatalogo(){
 
     //insertar catalogo de memoria compartida a lista
 
-    cargarCatalogoAdmin(cat);
-    prod elegido;
+    //cargarCatalogoAdmin(cat);
+    articulo elegido;
     set_escdelay(0);
     noecho();
     curs_set(0);
@@ -730,8 +724,7 @@ void AdministrarCatalogo(){
 
 
     while(1) {
-        Vaciarlistaproducto(cat);
-        cargarCatalogoAdmin(cat);
+        //cargarCatalogoAdmin(cat);
         curs_set(0);
         clear();
         int n=cat->NE;
@@ -759,7 +752,7 @@ void AdministrarCatalogo(){
         //imprime el catalogo
         for (int i = pos; i < n && (i - pos) < 30; i++) {
 
-            prod ac = getproducto(i, cat);
+            articulo ac = getproducto(i, cat);
             int fila = (LINES / 2) - (30 / 2) + (i - pos);
 
             move(fila, 0);
@@ -768,11 +761,11 @@ void AdministrarCatalogo(){
             if (i == opcion)
                 attron(A_REVERSE);
 
-            sprintf(pre, "%.2f", ac.p.precio);
-            sprintf(cant, "%d", ac.p.cantidad);
-            mvprintw(fila, 25 - strlen(ac.p.producto) / 2, "%s", ac.p.producto);
-            mvprintw(fila, 100 - strlen(cant) / 2, "%d", ac.p.cantidad);
-            mvprintw(fila, 174 - strlen(pre) / 2, "$%.2f", ac.p.precio);
+            sprintf(pre, "%.2f", ac.precio);
+            sprintf(cant, "%d", ac.cantidad);
+            mvprintw(fila, 25 - strlen(ac.producto) / 2, "%s", ac.producto);
+            mvprintw(fila, 100 - strlen(cant) / 2, "%d", ac.cantidad);
+            mvprintw(fila, 174 - strlen(pre) / 2, "$%.2f", ac.precio);
 
             attroff(A_REVERSE);
         }
@@ -821,24 +814,24 @@ void AdministrarCatalogo(){
                     curs_set(0);
                     clear();
                     mvprintw(LINES/2, (COLS/2)-strlen("Cuantas unidades de  desea quitar o agregar al catalogo?: "),
-                            "Cuantas unidades de %s desea quitar o agregar al catalogo?: ", elegido.p.producto);
-                    move((LINES/2),(COLS/2)+strlen("Cuantas unidades de  desea quitar o agregar al carrito?: ")+strlen(elegido.p.producto));
+                            "Cuantas unidades de %s desea quitar o agregar al catalogo?: ", elegido.producto);
+                    move((LINES/2),(COLS/2)+strlen("Cuantas unidades de  desea quitar o agregar al carrito?: ")+strlen(elegido.producto));
                     clrtoeol();
                     echo();
                     int cantidad=0;
                     getstr(aux);
                     cantidad=atoi(aux);
-                    if((elegido.p.cantidad+cantidad)<=0){
+                    if((elegido.cantidad+cantidad)<=0){
                         borrarproducto(opcion, cat);
-                        eliminarProductoAdmin(elegido.p.producto);  // ← actualiza shm
+                        eliminarProductoAdmin(elegido.producto);  // ← actualiza shm
                         ImprimirCentrado(LINES/2, "Producto eliminado con exito.");
                         getch();
                         return;
                     }else{
-                        elegido.p.cantidad += cantidad;
-                        prod fin=elegido;
+                        elegido.cantidad += cantidad;
+                        articulo fin=elegido;
                         setproducto(opcion, fin, cat);
-                        modificarExistenciasAdmin(elegido.p.producto, elegido.p.cantidad);  // ← actualiza shm
+                        modificarExistenciasAdmin(elegido.producto, elegido.cantidad);  // ← actualiza shm
                         curs_set(0);
                         clear();
                         ImprimirCentrado(LINES/2, "Existencias actualizadas con exito.");

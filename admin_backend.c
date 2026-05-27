@@ -7,6 +7,7 @@
 #include <sys/sem.h>
 #include "inventario.h"
 #include "admin.h"
+#include "listas.h"
 #include "utilidades.h"
 
 // ──────────────────────────────────────────
@@ -57,25 +58,12 @@ void desconectarServidorAdmin() {
 // CARGAR CATALOGO DESDE SHM A LISTAPRODUCTO
 // ──────────────────────────────────────────
 
-void cargarCatalogoAdmin(listaproducto cat) {
+void cargarCatalogoAdmin(listaarticulo cat) {
     if (!shm) return;
 
     downSem(semID, SEM_INV);
 
-    for (int i = 0; i < shm->totalProductos; i++) {
-        Producto *p = &shm->productos[i];
-        if (!p->activo) continue;
-
-        producto item;
-        strncpy(item.producto, p->nombre, sizeof(item.producto) - 1);
-        item.producto[sizeof(item.producto) - 1] = '\0';
-        item.cantidad = p->existencias;
-        item.precio   = p->precio;
-
-        prod fin;
-        fin.p = item;
-        addproducto(cat->NE, fin, cat);
-    }
+    //shm a lista catalogo
 
     upSem(semID, SEM_INV);
 }
@@ -84,7 +72,7 @@ void cargarCatalogoAdmin(listaproducto cat) {
 // AGREGAR PRODUCTO A SHM
 // ──────────────────────────────────────────
 
-int agregarProductoAdmin(prod p) {
+int agregarProductoAdmin(infoarticulo p) {
     if (!shm) return 0;
 
     Producto nuevo;

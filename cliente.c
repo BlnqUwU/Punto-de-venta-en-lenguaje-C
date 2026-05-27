@@ -1,13 +1,10 @@
-#include <ncurses.h>
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
 #include "cliente.h"
-#include "cliente_backend.h"
+#include "conexionipc.h"
+#include "listas.h"
 
 listaarticulo carritoGlobal;
 
-void Carrito(char *usuario){
+void Carrito(usuario u){
     int opcion = 0;
     int tecla,tecla2;
     
@@ -20,8 +17,14 @@ void Carrito(char *usuario){
     
     listaarticulo cat;
     crearlistaarticulo(&cat);
-    infoarticulo elegido;
-    infoarticulo auxtotal;
+
+    time_t t = time(NULL);
+    struct tm *tm_info = localtime(&t);
+    char fecha[20];
+    strftime(fecha, sizeof(fecha), "%d/%m/%Y %H:%M", tm_info);
+
+    articulo elegido;
+    articulo auxtotal;
     set_escdelay(0);
     noecho();
     curs_set(0);
@@ -57,7 +60,7 @@ void Carrito(char *usuario){
         if(!emptyarticulo(carritoGlobal)){ //verifica si el carrito esta vacio
             //imprime el carrito
         for (int i = pos; i < n && (i - pos) < 30; i++) {
-            infoarticulo ac = getarticulo(i, carritoGlobal);
+            articulo ac = getarticulo(i, carritoGlobal);
             int fila = (LINES / 2) - (30 / 2) + (i - pos);
 
             move(fila, 0);
@@ -121,7 +124,8 @@ void Carrito(char *usuario){
                     clear();
 
                     //mandar totalpagar a servidor para reporte de venta
-                    registrarVenta(totalpagar, usuario);
+                    venta v ={totalpagar,u, fecha};
+                    enviarVenta(v);
 
                     if(!emptyarticulo(carritoGlobal)){ //verifica si el carrito esta vacio
                         Vaciarlistaarticulo(carritoGlobal); //elimina los elementos del carrito
@@ -164,9 +168,12 @@ void Carrito(char *usuario){
                             case 10:
                                 elegido.cantidad=elegido.cantidad-cantidad;
                                 if(elegido.cantidad==0){ //si se quita toda la cantidad del carrito entonces lo quita del carrito y lo añade al catalogo
-                                    borrararticulo(opcion, carritoGlobal);
+                                    enviararticulo(elegido, 4);
+                                    enviararticulo(elegido, 2);
+                                    
+                                    /*borrararticulo(opcion, carritoGlobal);
                                     addarticulo(opcion,elegido,cat);
-                                    devolverExistencias(elegido.producto, cantidad); // ← falta
+                                    devolverExistencias(elegido.producto, cantidad); // ← falta*/
                                 }else { 
                                     setarticulo(opcion, elegido, carritoGlobal);//actualiza la cantidad de elementos del producto en el carrito
                                     devolverExistencias(elegido.producto, cantidad);
@@ -194,7 +201,7 @@ void Carrito(char *usuario){
     return;
 }
 
-void Catalogo(char *usuario){
+void Catalogo(usuario u){
     int opcion = 0;
     int tecla,tecla2;
 
@@ -206,9 +213,10 @@ void Catalogo(char *usuario){
     int m= sizeof(menu)/sizeof(menu[0]);
 
      //insertar catalogo de memoria compartida a lista
-    cargarCatalogo(cat);
+    //cargarCatalogo(cat);
+    cat=ObtenerCatalogo();
     
-    infoarticulo elegido;
+    articulo elegido;
     set_escdelay(0);
     noecho();
     curs_set(0);
@@ -218,6 +226,7 @@ void Catalogo(char *usuario){
     while(1) {
         curs_set(0);
         clear();
+        cat=ObtenerCatalogo();
         int n=cat->NE;
         int salir=0;
         
@@ -240,7 +249,7 @@ void Catalogo(char *usuario){
         if(!emptyarticulo(cat))//verifica si el catalogo esta vacio
         //imprime el catalogo
         for (int i = pos; i < n && (i - pos) < 30; i++) {
-            infoarticulo ac = getarticulo(i, cat);
+            articulo ac = getarticulo(i, cat);
             int fila = (LINES / 2) - (30 / 2) + (i - pos);
 
             move(fila, 0);
@@ -348,7 +357,7 @@ void Catalogo(char *usuario){
     return;
 }
 
-int Perfil(char *usr){
+int Perfil(usuario u){
     int opcion = 0;
     int tecla;
     int ver[5]={0,0,0,0,0};
@@ -365,7 +374,7 @@ int Perfil(char *usr){
 
     int n = sizeof(menu)/sizeof(menu[0]);
 
-    usuario login = SolicitarPerfil(usr);
+    usuario login = obtenerUsuario(u);
     char aux[100];
 
     char *DatosUsuario[]={
@@ -545,7 +554,7 @@ int Perfil(char *usr){
     return 0;
 }
 
-void MenuPrincipal(char *usuario){
+void MenuPrincipal(usuario u){
     int opcion = 0;
     int tecla;
     char *menu[] = {
@@ -567,7 +576,7 @@ void MenuPrincipal(char *usuario){
         curs_set(0);
         clear();
         
-        mvprintw((LINES/2)-3, ((COLS-strlen("!Bienvenido ")-strlen(usuario))/2), "!Bienvenido %s!", usuario);
+        mvprintw((LINES/2)-3, ((COLS-strlen("!Bienvenido ")-strlen(u.usr))/2), "!Bienvenido %s!", u.usr);
         ImprimirCentrado((LINES/2)-2, "Selecciona una opcion");
         
         //imprime las opciones del menu
@@ -597,13 +606,13 @@ void MenuPrincipal(char *usuario){
 
                 switch (opcion) {
                     case 0:
-                        Catalogo(usuario);
+                        Catalogo(u);
                         break;
                     case 1:
-                        Carrito(usuario);
+                        Carrito(u);
                         break;
                     case 2:
-                        if (Perfil(usuario)==1) //si hubo cambios en el perfil y fueron guardados correctamente entonces regresa al inicio de sesion
+                        if (Perfil(u)==1) //si hubo cambios en el perfil y fueron guardados correctamente entonces regresa al inicio de sesion
                             return;
                         else//si no entonces regresa a esta ventana
                             break;
@@ -960,7 +969,7 @@ void iniciarSesion() {
 
                     if(cargarUsuario(user) == 1) { //pedir la sesion al servidor (funcion en funciones_cliente), si usuario existe en base de datos entra al menu principal
                         clear();
-                        MenuPrincipal(user.usr);
+                        MenuPrincipal(user);
                         return;
                     }else{
                         strcpy(user.usr, "");

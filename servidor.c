@@ -1,14 +1,5 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <pthread.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/ipc.h>
-#include <sys/shm.h>
-#include <sys/sem.h>
-#include "cliente.h"
-#include "inventario.h"
-#include "admin.h"
+#include "memoria_compartida.h"
+#include "servidor.h"
 
 // ──────────────────────────────────────────
 // ARGUMENTOS PARA HILO DE CLIENTE
@@ -16,7 +7,9 @@
 
 typedef struct {
     int semID;
-    InventarioShm *shm;
+    InventarioShm *Ishm;
+    usuarioShm *Ushm;
+    ventaShm *Vshm;
 } ArgsHilo;
 
 // ──────────────────────────────────────────
@@ -51,6 +44,7 @@ int main() {
     // GENERAR LLAVES IPC
     key_t keyShm = ftok(ARCHIVO_IPC, 'M');
     key_t keyShm_usr = ftok(ARCHIVO_IPC, 'U');
+    key_t keyShm_venta = ftok(ARCHIVO_IPC, 'V');
     key_t keySem = ftok(ARCHIVO_IPC, 'S');
     if (keyShm == -1 || keySem == -1) {
         perror("ftok");
@@ -84,12 +78,25 @@ int main() {
         exit(1);
     }
 
+        //VENTAS
+    int shmID3 = shmget(keyShm_venta, sizeof(ventaShm), IPC_CREAT | PERMISOS);
+    if (shmID3 == -1) {
+        perror("shmget");
+        exit(1);
+    }
+
+    ventaShm *Vshm = (ventaShm *) shmat(shmID3, NULL, 0);
+    if (Vshm == (void *) -1) {
+        perror("shmat");
+        exit(1);
+    }
+
 
     // CARGAR INVENTARIO DESDE ARCHIVO (si existe)
-    if (cargarInventario(Ishm))
+    /*if (cargarInventario(Ishm))
         printf("[SERVIDOR] Inventario cargado: %d productos.\n", Ishm->totalProductos);
     else
-        printf("[SERVIDOR] Inventario nuevo.\n");
+        printf("[SERVIDOR] Inventario nuevo.\n");*/
 
     // CREAR SEMAFOROS
     int semID = semget(keySem, 3, IPC_CREAT | PERMISOS);
@@ -128,15 +135,16 @@ int main() {
         }
 
         // GUARDAR INVENTARIO ACTUALIZADO EN ARCHIVO
-        downSem(semID, SEM_INV);
+        /*downSem(semID, SEM_INV);
         guardarInventario(Ishm);
-        upSem(semID, SEM_INV);
+        upSem(semID, SEM_INV);*/
     }
 
     // LIMPIEZA (no se llega aqui en condiciones normales)
     shmdt(Ishm);
     shmdt(Ushm);
     shmctl(shmID, IPC_RMID, 0);
+    shmctl(shmID2, IPC_RMID, 0);
     semctl(semID, 0, IPC_RMID);
 
     return 0;
