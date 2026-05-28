@@ -12,14 +12,18 @@ void desconectarServidor();
 // FUNCIONES DE COMUNICACION
 // ──────────────────────────────────────────
 
-int enviararticulo(articulo p, int CRUD);
+int enviararticulo(articulo p, int CRUD, int BD); // 0 catalogo, 1 carrito
 listaarticulo ObtenerCatalogo();
+listaarticulo ObtenerCarrito();
 
-int enviarusuario(usuario u, int CRUD);
+
+int enviarusuario(usuario u, int CRUD); //lee llaves primarias (usuario correo)
+
+int solicitarSesion(usuario u);
 usuario obtenerUsuario(usuario u);
 lista ObtenerUsuarios();
 
-listaventa obtenerVentas();
+listaventa obtenerVentas(int tipo); //0 DIARIO, 1 SEMANAL, 2 MENSUAL
 void enviarVenta(venta v);
 
 

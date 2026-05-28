@@ -35,7 +35,7 @@ lista EnviarUsuarios();
 // FUNCIONES DE BASE DE DATOS (ARCHIVOS)
 // ──────────────────────────────────────────
 void CRUDusuario(lista usuarios, int CRUD);
-void CRUDcatalogo(listaarticulo catalogo, int CRUD);
+void CRUDcatalogo(listaarticulo catalogo, int CRUD, int BD);
 void CRUDventas(listaventa ventas, int CRUD);
 
 

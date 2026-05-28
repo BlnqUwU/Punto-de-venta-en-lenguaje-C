@@ -23,7 +23,7 @@ void CRUDusuario(lista usuarios, int CRUD){
     return;
 }
 
-void CRUDcatalogo(listaarticulo catalogo, int CRUD){
+void CRUDcatalogo(listaarticulo catalogo, int CRUD, int BD){
     return;
 }
 

@@ -1,4 +1,5 @@
 #include "admin.h"
+#include "listas.h"
 
 #define ARCHIVO_ADMINS "admins.txt"
 
@@ -36,7 +37,7 @@ int buscarAdmin(char *usr) {
     return 0;
 }
 
-int registrarAdmin(admin a) {
+int registrarAdmin(usuario a) {
     FILE *archivo = fopen(ARCHIVO_ADMINS, "a");
     if (!archivo) {
         perror("registrarAdmin: fopen");
@@ -48,7 +49,7 @@ int registrarAdmin(admin a) {
     return 1;
 }
 
-int solicitarSesionAdmin(admin a) {
+int solicitarSesionAdmin(usuario a) {
     char linea[300];
     FILE *archivo = fopen(ARCHIVO_ADMINS, "r");
     if (!archivo) return 0;
@@ -68,7 +69,7 @@ int solicitarSesionAdmin(admin a) {
 
 void crearAdminSiNoExiste() {
     if (buscarAdmin("admin") == 0) {
-        admin a;
+        usuario a;
         char pass_plano[] = "admin";
         strcpy(a.nombre,   "Admin");
         strcpy(a.apellido, "Sistema");
@@ -84,7 +85,7 @@ void crearAdminSiNoExiste() {
 // SESION USUARIO
 // ──────────────────────────────────────────
 
-int SolicitarSesion(admin a) {
+int SolicitarSesion(usuario a) {
     char linea[200];
     FILE *archivo = fopen(ARCHIVO_ADMINS, "r");
     if (archivo == NULL) return 0;
@@ -112,7 +113,7 @@ int SolicitarSesion(admin a) {
 // ARCHIVOS DE USUARIOS
 // ──────────────────────────────────────────
 
-int RegistrarUsuario(admin u, char *arch) {
+int RegistrarUsuario(usuario u, char *arch) {
     FILE *archivo = fopen(arch, "a");
     if (archivo != NULL) {
         fprintf(archivo, "%s,", strcmp(u.nombre, "") == 0 ? " " : u.nombre);
@@ -127,10 +128,10 @@ int RegistrarUsuario(admin u, char *arch) {
     return 0;
 }
 
-int ModificarAtributo(admin u, char *usr) {
+int ModificarAtributo(usuario u, char *usr) {
     char linea[200];
     FILE *archivo = fopen("usuarios.txt", "r");
-    admin temp = {"","","","",""};
+    usuario temp = {"","","","",""};
     if (archivo == NULL) return 0;
 
     while (fgets(linea, sizeof(linea), archivo)) {
@@ -147,10 +148,10 @@ int ModificarAtributo(admin u, char *usr) {
     return 1;
 }
 
-int ModificarAtributoCatalogo(admin u, char *usr) {
+int ModificarAtributoCatalogo(usuario u, char *usr) {
     char linea[200];
     FILE *archivo = fopen("usuarios.txt", "r");
-    admin temp = {"","","","",""};
+    usuario temp = {"","","","",""};
     if (archivo == NULL) return 0;
 
     while (fgets(linea, sizeof(linea), archivo)) {
@@ -167,7 +168,7 @@ int ModificarAtributoCatalogo(admin u, char *usr) {
     return 1;
 }
 
-int BorrarUsuario(admin a, char *usr){
+int BorrarUsuario(usuario a, char *usr){
     //solicitar a servidor borrar este usuario
     //si lo borra retorna 1 si no retorna 0
     return 0;
@@ -182,7 +183,7 @@ lista ObtenerUsuarios() {
     FILE *archivo = fopen("usuarios.txt", "r");
     lista usuarios;
     crearlista(&usuarios);
-    admin user = {"","","","",""};
+    usuario user = {"","","","",""};
     info usr;
     int cont = 0;
 
@@ -199,13 +200,13 @@ lista ObtenerUsuarios() {
     return usuarios;
 }
 
-listaproducto ObtenerProductos() {
+listaarticulo ObtenerProductos() {
     char linea[200];
     FILE *archivo = fopen("catalogo.txt", "r");
-    listaproducto productos;
-    crearlistaproducto(&productos);
+    listaarticulo productos;
+    crearlistaarticulo(&productos);
     producto prod_temp = {"", 0, 0};
-    prod fin;
+    producto fin;
     int cont = 0;
     char cantidad[50], precio[50];
 
