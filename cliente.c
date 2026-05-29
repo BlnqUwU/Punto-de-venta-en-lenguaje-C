@@ -1101,8 +1101,9 @@ void menu() {
 }
 
 int main() {
-    if (conectarServidor() == 0) {
-        return 1;
+    if (!conectarServidor()) {
+        printf("Error: el servidor no esta corriendo.\n");
+        exit(1);
     }
     menu();
     desconectarServidor();

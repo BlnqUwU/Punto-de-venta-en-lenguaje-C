@@ -1,5 +1,14 @@
 #include "memoria_compartida.h"
 #include "servidor.h"
+#include <signal.h>
+
+//GLOBALES
+
+int shmID;
+int shmID2;
+int shmID3;
+int shmID4;
+int semID;
 
 // ──────────────────────────────────────────
 // ARGUMENTOS PARA HILO DE CLIENTE
@@ -42,12 +51,15 @@ void *atenderPeticion(void *arg) {
 
     // POR AHORA SOLO CONFIRMA RECEPCION
     // AQUI SE EXPANDIRA CON LOGICA DE VENTA
+}
 
-
-
-    upSem(args->semID, SEM_ACK);
-
-    return NULL;
+void limpiar(int sig) {
+    shmctl(shmID,  IPC_RMID, 0);
+    shmctl(shmID2, IPC_RMID, 0);
+    shmctl(shmID3, IPC_RMID, 0);
+    shmctl(shmID4, IPC_RMID, 0);
+    semctl(semID, 0, IPC_RMID);
+    exit(0);
 }
 
 // ──────────────────────────────────────────
@@ -73,7 +85,7 @@ int main() {
 
     // CREAR MEMORIA COMPARTIDA
         //INVENTARIO
-    int shmID = shmget(keyShm, sizeof(InventarioShm), IPC_CREAT | PERMISOS);
+    shmID = shmget(keyShm, sizeof(InventarioShm), IPC_CREAT | PERMISOS);
     if (shmID == -1) {
         perror("shmget");
         exit(1);
@@ -86,7 +98,7 @@ int main() {
     }
 
         //USUARIOS
-    int shmID2 = shmget(keyShm_usr, sizeof(usuarioShm), IPC_CREAT | PERMISOS);
+    shmID2 = shmget(keyShm_usr, sizeof(usuarioShm), IPC_CREAT | PERMISOS);
     if (shmID2 == -1) {
         perror("shmget");
         exit(1);
@@ -99,7 +111,7 @@ int main() {
     }
 
         //VENTAS
-    int shmID3 = shmget(keyShm_venta, sizeof(ventaShm), IPC_CREAT | PERMISOS);
+    shmID3 = shmget(keyShm_venta, sizeof(ventaShm), IPC_CREAT | PERMISOS);
     if (shmID3 == -1) {
         perror("shmget");
         exit(1);
@@ -113,7 +125,7 @@ int main() {
 
     // CONTROL
 
-    int shmID4 = shmget(keyShm_ctrl, sizeof(ControlShm), IPC_CREAT | PERMISOS);
+    shmID4 = shmget(keyShm_ctrl, sizeof(ControlShm), IPC_CREAT | PERMISOS);
     if (shmID4 == -1) {
         perror("shmget");
         exit(1);
@@ -132,7 +144,7 @@ int main() {
         printf("[SERVIDOR] Inventario nuevo.\n");*/
 
     // CREAR SEMAFOROS
-    int semID = semget(keySem, 5, IPC_CREAT | PERMISOS);
+    semID = semget(keySem, 5, IPC_CREAT | PERMISOS);
     if (semID == -1) {
         perror("semget");
         exit(1);
@@ -154,6 +166,9 @@ int main() {
 
 
     printf("[SERVIDOR] PID: %d listo. Esperando clientes...\n\n", getpid());
+
+    signal(SIGINT, limpiar);
+    signal(SIGTERM, limpiar);
 
     // BUCLE PRINCIPAL — ATIENDE PETICIONES
     while (1) {

@@ -60,7 +60,7 @@ int conectarServidor() {
         return 0;
     }
         //VENTAS
-    shmID3 = shmget(keyShm_venta, sizeof(ventaShm), IPC_CREAT | PERMISOS);
+    shmID3 = shmget(keyShm_venta, sizeof(ventaShm), PERMISOS);
     if (shmID3 == -1) {
         perror("shmget");
         exit(1);
