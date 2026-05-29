@@ -10,6 +10,7 @@ typedef struct {
     InventarioShm *Ishm;
     usuarioShm *Ushm;
     ventaShm *Vshm;
+    ControlShm *Cshm;
 } ArgsHilo;
 
 // ──────────────────────────────────────────
@@ -19,12 +20,30 @@ typedef struct {
 void *atenderPeticion(void *arg) {
     ArgsHilo *args = (ArgsHilo *) arg;
 
+    int tipo = args -> Cshm -> tipo;
+    printf("[SERVIDOR] Peticion recibida. Tipo: %d. Atendiendo...\n", tipo);
+
+    if (tipo == 0) {
+        // INVENTARIO
+        CRUDcatalogo(NULL, args->Ishm->CRUD, 0);
+    } else if (tipo == 1) {
+        //USUARIOS
+        CRUDusuario(args->Ushm, args->Ushm->CRUD);
+    } else if (tipo == 2) {
+        // VENTAS
+        CRUDventas(NULL, args->Vshm->CRUD);
+    }
+
+    upSem(args->semID, SEM_ACK);
+    return NULL;
+
+
     // LEER PETICION DESDE MEMORIA COMPARTIDA
 
     // POR AHORA SOLO CONFIRMA RECEPCION
     // AQUI SE EXPANDIRA CON LOGICA DE VENTA
 
-    printf("[SERVIDOR] Peticion recibida. Atendiendo...\n");
+
 
     upSem(args->semID, SEM_ACK);
 
@@ -45,6 +64,7 @@ int main() {
     key_t keyShm = ftok(ARCHIVO_IPC, 'M');
     key_t keyShm_usr = ftok(ARCHIVO_IPC, 'U');
     key_t keyShm_venta = ftok(ARCHIVO_IPC, 'V');
+    key_t keyShm_ctrl = ftok(ARCHIVO_IPC, 'C');
     key_t keySem = ftok(ARCHIVO_IPC, 'S');
     if (keyShm == -1 || keySem == -1) {
         perror("ftok");
@@ -91,6 +111,19 @@ int main() {
         exit(1);
     }
 
+    // CONTROL
+
+    int shmID4 = shmget(keyShm_ctrl, sizeof(ControlShm), IPC_CREAT | PERMISOS);
+    if (shmID4 == -1) {
+        perror("shmget");
+        exit(1);
+    }
+
+    ControlShm *Cshm = (ControlShm *) shmat(shmID4, NULL, 0);
+    if (Cshm == (void *) -1) {
+        perror("shmat");
+        exit(1);
+    }
 
     // CARGAR INVENTARIO DESDE ARCHIVO (si existe)
     /*if (cargarInventario(Ishm))
@@ -99,7 +132,7 @@ int main() {
         printf("[SERVIDOR] Inventario nuevo.\n");*/
 
     // CREAR SEMAFOROS
-    int semID = semget(keySem, 3, IPC_CREAT | PERMISOS);
+    int semID = semget(keySem, 5, IPC_CREAT | PERMISOS);
     if (semID == -1) {
         perror("semget");
         exit(1);
@@ -107,13 +140,18 @@ int main() {
 
     // INICIALIZAR SEMAFOROS
     // SEM_INV  = 1 -> inventario libre
+    // SEM_USR  = 1 -> usuarios libre
+    // SEM_VTA  = 1 -> ventas libre
     // SEM_REQ  = 0 -> sin peticiones
     // SEM_ACK  = 0 -> sin respuestas
 
     union semun arg;
     arg.val = 1; semctl(semID, SEM_INV, SETVAL, arg);
+    arg.val = 1; semctl(semID, SEM_USR, SETVAL, arg);
+    arg.val = 1; semctl(semID, SEM_VTA, SETVAL, arg);
     arg.val = 0; semctl(semID, SEM_REQ, SETVAL, arg);
     arg.val = 0; semctl(semID, SEM_ACK, SETVAL, arg);
+
 
     printf("[SERVIDOR] PID: %d listo. Esperando clientes...\n\n", getpid());
 
@@ -125,7 +163,7 @@ int main() {
 
         // CREAR HILO PARA ATENDER
         pthread_t hilo;
-        ArgsHilo args = {semID, Ishm};
+        ArgsHilo args = {semID, Ishm, Ushm, Vshm, Cshm};
 
         if (pthread_create(&hilo, NULL, atenderPeticion, &args) != 0) {
             perror("pthread_create");
@@ -143,6 +181,8 @@ int main() {
     // LIMPIEZA (no se llega aqui en condiciones normales)
     shmdt(Ishm);
     shmdt(Ushm);
+    shmdt(Vshm);
+    shmdt(Cshm);
     shmctl(shmID, IPC_RMID, 0);
     shmctl(shmID2, IPC_RMID, 0);
     semctl(semID, 0, IPC_RMID);

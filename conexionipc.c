@@ -2,6 +2,7 @@
 #include "conexionipc.h"
 #include "listas.h"
 #include "memoria_compartida.h"
+#include "servidor.h"
 
 // ──────────────────────────────────────────
 // CONEXION A IPC 
@@ -11,10 +12,12 @@
 static InventarioShm *Ishm   = NULL;
 static usuarioShm *Ushm   = NULL;
 static ventaShm *Vshm   = NULL;
+static ControlShm *Cshm   = NULL;
 static int            semID = -1;
 static int            shmID = -1;
 static int            shmID2 = -1;
 static int            shmID3 = -1;
+static int            shmID4 = -1;
 
 
 int conectarServidor() {
@@ -57,21 +60,35 @@ int conectarServidor() {
         return 0;
     }
         //VENTAS
-    int shmID3 = shmget(keyShm_venta, sizeof(ventaShm), IPC_CREAT | PERMISOS);
+    shmID3 = shmget(keyShm_venta, sizeof(ventaShm), IPC_CREAT | PERMISOS);
     if (shmID3 == -1) {
         perror("shmget");
         exit(1);
     }
 
-    ventaShm *Vshm = (ventaShm *) shmat(shmID3, NULL, 0);
+    Vshm = (ventaShm *) shmat(shmID3, NULL, 0);
     if (Vshm == (void *) -1) {
         perror("shmat");
         exit(1);
     }
 
+    // CONTROL
+
+    key_t keyShm_ctrl = ftok(ARCHIVO_IPC, 'C');
+    shmID4 = shmget(keyShm_ctrl, sizeof(ControlShm), PERMISOS);
+    if (shmID4 == -1) {
+        perror("shmget");
+        return 0;
+    }
+    Cshm = (ControlShm *) shmat(shmID4, NULL, 0);
+    if (Cshm == (void *) -1) {
+        perror("shmat");
+        return 0;
+    }
+
     // SEMAFOROS
 
-    semID = semget(keySem, 3, PERMISOS);
+    semID = semget(keySem, 5, PERMISOS);
     if (semID == -1) {
         perror("semget");
         return 0;
@@ -81,11 +98,10 @@ int conectarServidor() {
 }
 
 void desconectarServidor() {
-    if (Ishm&&Ushm&&Vshm){
-      shmdt(Ishm);  
-      shmdt(Ushm);
-      shmdt(Vshm);
-    } 
+    if (Ishm) shmdt(Ishm);
+    if (Ushm) shmdt(Ushm);
+    if (Vshm) shmdt(Vshm);
+    if (Cshm) shmdt(Cshm);
 }
 
 // ──────────────────────────────────────────
@@ -118,33 +134,99 @@ listaarticulo ObtenerCarrito(){
     return carrito;
 }
 
-int enviarusuario(usuario u, int CRUD){
+int enviarusuario(usuario u, int CRUD, char *nombreUsuario){
     //GUARDA ATRIBUTOS EN SHM DE USUARIO
+
+    if (!Ushm) return 0;
 
     //SI CRUD==1 DEBE ESPERAR RESPUESTA DE SERVIDOR Y RETORNAR LA VARIABLE
     //REALIZADO
-    
-    return 0;
 
+    downSem(semID, SEM_USR);
+    Ushm->u         = u;
+    Ushm->CRUD      = CRUD;
+    Ushm->realizado = 0;
+    if (nombreUsuario != NULL) {
+        strncpy(Ushm -> usr_original, nombreUsuario, sizeof(Ushm -> usr_original) - 1);
+    } else {
+        Ushm -> usr_original[0] = '\0';
+    }
+    upSem(semID, SEM_USR);
+
+    Cshm -> tipo = 1;
+    upSem(semID, SEM_REQ);
+    downSem(semID, SEM_ACK);
+
+    return Ushm -> realizado;
 }
 
 int solicitarSesion(usuario u){
     //GUARDA USUARIO Y CRUD==1 EN SHM DE USUARIO
 
+    if (!Ushm) return 0;
+
     //ESPERA RESPUESTA DEL SERVIDOR, RETORNA LA VARIABLE REALIZADO
-    return 0;
+
+    downSem(semID, SEM_USR);
+    Ushm -> u = u;
+    Ushm -> CRUD = 1;
+    Ushm -> realizado = 0;
+    upSem(semID, SEM_USR);
+
+    Cshm -> tipo = 1;
+    upSem(semID, SEM_REQ);
+    downSem(semID, SEM_ACK);
+
+    return Ushm -> realizado;
 }
 
 usuario obtenerUsuario(usuario u){
-    usuario usuario;
+
+    usuario vacio = {"","","","",""};
+    if (!Ushm) return vacio;
+
     //GUARDA ATRIBUTOS EN SHM Y CRUD==1 DE USUARIO
     //ESPERA RESPUESTA DEL SERVIDOR Y RETORNA EL USUARIO RECIBIDO DEL SERVIDOR
-    return usuario;
+
+    downSem(semID, SEM_USR);
+    Ushm -> u = u;
+    Ushm -> CRUD = 1;
+    Ushm -> realizado = 0;
+    upSem(semID, SEM_USR);
+
+    Cshm -> tipo = 1;
+    upSem(semID, SEM_REQ);
+    downSem(semID, SEM_ACK);
+
+    if (Ushm -> realizado == 1) return Ushm -> u;
+    return vacio;
 }
 
 lista ObtenerUsuarios(){
     lista usuarios;
+    crearlista(&usuarios);
+    if (!Ushm) return usuarios;
+
     //GUARDA LOS USUARIOS DE LA MEMORIA COMPARTIDA Y CRUD==1 Y LA RETORNA
+
+    downSem(semID, SEM_USR);
+    Ushm->CRUD = 1;
+    Ushm -> realizado = 0;
+    upSem(semID, SEM_USR);
+
+    Cshm -> tipo = 1;
+    upSem(semID, SEM_REQ);
+    downSem(semID, SEM_ACK);
+
+    downSem(semID, SEM_USR);
+    for (int i = 0; i < Ushm -> totalUsuarios; i++) {
+        info inf;
+        inf.u = Ushm -> usuarios[i];
+        add(usuarios -> NE, inf, usuarios);
+    }
+
+    upSem(semID, SEM_USR);
+
     return usuarios;
 }
 

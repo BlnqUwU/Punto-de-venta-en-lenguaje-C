@@ -17,7 +17,7 @@ listaarticulo ObtenerCatalogo();
 listaarticulo ObtenerCarrito();
 
 
-int enviarusuario(usuario u, int CRUD); //lee llaves primarias (usuario correo)
+int enviarusuario(usuario u, int CRUD, char *nombreUsuario); //lee llaves primarias (usuario correo)
 
 int solicitarSesion(usuario u);
 usuario obtenerUsuario(usuario u);

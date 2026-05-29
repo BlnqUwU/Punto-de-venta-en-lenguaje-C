@@ -7,11 +7,13 @@
 // ──────────────────────────────────────────
 // INDICES DE SEMAFOROS
 // SEM_INV -- protege lectura/escritura del inventario
+// SEM_USR -- protege lectura/escritura de Usuarios
+// SEM_VTA -- protege lectura/escritura de Ventas
 // SEM_REQ -- cliente hizo una peticion
 // SEM_ACK -- servidor respondio
 // ──────────────────────────────────────────
 
-enum { SEM_INV = 0, SEM_REQ = 1, SEM_ACK = 2 };
+enum { SEM_INV = 0, SEM_USR = 1, SEM_VTA = 2, SEM_REQ = 3, SEM_ACK = 4 };
 
 // ──────────────────────────────────────────
 // UNION SEMUN
@@ -34,7 +36,7 @@ lista EnviarUsuarios();
 // ──────────────────────────────────────────
 // FUNCIONES DE BASE DE DATOS (ARCHIVOS)
 // ──────────────────────────────────────────
-void CRUDusuario(lista usuarios, int CRUD);
+void CRUDusuario(usuarioShm *Ushm, int CRUD);
 void CRUDcatalogo(listaarticulo catalogo, int CRUD, int BD);
 void CRUDventas(listaventa ventas, int CRUD);
 

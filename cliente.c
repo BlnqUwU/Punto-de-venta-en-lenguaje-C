@@ -387,6 +387,8 @@ int Perfil(usuario u){
     int n = sizeof(menu)/sizeof(menu[0]);
 
     usuario login = obtenerUsuario(u);
+    char usr_original[100];
+    strncpy(usr_original, login.usr, sizeof(usr_original) - 1);
     char aux[100];
 
     char *DatosUsuario[]={
@@ -543,7 +545,7 @@ int Perfil(usuario u){
                     case 5://guardar datos elegido
                         curs_set(0);
                         clear();
-                        if(enviarusuario(login, 2)){ //mandar modificaciones al servidor (funcion en funciones_cliente)
+                        if(enviarusuario(login, 2, usr_original)){ //mandar modificaciones al servidor (funcion en funciones_cliente)
                             ImprimirCentrado(LINES/2, "Cambios Guardados con exito, vuelve a iniciar sesion.");
                             getch();
                             clear();
@@ -859,7 +861,7 @@ void registrar() {
                             
                             break;
                         }else{
-                            if (enviarusuario(user, 0) == 1) { //mandar registro a servidor (funcion en funciones_cliente)
+                            if (enviarusuario(user, 0, NULL) == 1) { //mandar registro a servidor (funcion en funciones_cliente)
                                 mvprintw(3, 10, "Registro Exitoso");
                                 getch();
                                 clear();

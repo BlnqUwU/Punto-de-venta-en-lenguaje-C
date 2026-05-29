@@ -5,8 +5,25 @@ int BuscarAtributo(char *atributo, char *BD){
 }
 
 int EnviarSesion(usuario u, char *BD){
-    return 0;
+
+    char linea[300];
+    FILE *archivo = fopen(BD, "r");
+    if (!archivo) return -1;
+
+    while (fgets(linea, sizeof(linea), archivo)) {
+        char nombre[100], apellido[100], correo[100], usr[100], pass[100];
+        sscanf(linea, "%[^,],%[^,],%[^,],%[^,],%[^,\n]",
+               nombre, apellido, correo, usr, pass);
+
+        if (strcmp(usr, u.usr) == 0 && strcmp(pass, u.pass) == 0) {
+            fclose(archivo);
+            return 1;
+        }
+    }
+    fclose(archivo);
+    return -1;
 }
+
 listaarticulo EnviarCatalogo(){
     listaarticulo catalogo;
 
@@ -14,13 +31,126 @@ listaarticulo EnviarCatalogo(){
 }
 lista EnviarUsuarios(){
     lista usuarios;
+    crearlista(&usuarios);
+    char linea[300];
+    FILE *archivo = fopen(ARCHIVO_USR, "r");
+    if (!archivo) return usuarios;
 
+    int cont = 0;
+    while (fgets(linea, sizeof(linea), archivo)) {
+        usuario u;
+        sscanf(linea, "%[^,],%[^,],%[^,],%[^,],%[^,\n]",
+               u.nombre, u.apellido, u.correo, u.usr, u.pass);
+
+        info inf;
+        inf.u = u;
+        add(cont, inf, usuarios);
+        cont++;
+    }
+    fclose(archivo);
     return usuarios;
 }
 
 
-void CRUDusuario(lista usuarios, int CRUD){
-    return;
+void CRUDusuario(usuarioShm *Ushm, int CRUD){
+
+    // CRUD: 0=crear 1=leer/sesion 2=actualizar 3=borrar
+
+    if (CRUD == 0) {
+        //CREAR
+        FILE *archivo = fopen(ARCHIVO_USR, "a");
+        if (!archivo) { Ushm -> realizado = -1; return; }
+
+        usuario u = Ushm -> u;
+        fprintf(archivo, "%s,%s,%s,%s,%s,\n",
+                u.nombre, u.apellido, u.correo, u.usr, u.pass);
+        fclose(archivo);
+        if (Ushm -> totalUsuarios < MAX_USUARIOS) {
+            Ushm -> usuarios[Ushm -> totalUsuarios] = u;
+            Ushm -> totalUsuarios++;
+        }
+        Ushm -> realizado = 1;
+    } else if (CRUD == 1) {
+        //LEER
+        for (int i = 0; i < Ushm -> totalUsuarios; i++) {
+            if (strcmp(Ushm -> usuarios[i].usr, Ushm -> u.usr) == 0) {
+                if (strcmp(Ushm -> usuarios[i].pass, "") != 0) {
+                    if (strcmp(Ushm -> usuarios[i].pass, Ushm -> u.pass) != 0) {
+                        Ushm -> realizado = -1;
+                        return;
+                    }
+                }
+                Ushm -> u = Ushm -> usuarios[i];
+                Ushm -> realizado = 1;
+                return;
+            }
+        }
+        Ushm -> realizado = -1;
+    } else if (CRUD == 2) {
+        // ACTUALIZAR
+
+        char *buscar = (strlen(Ushm->usr_original) > 0) ? Ushm->usr_original : Ushm->u.usr;
+
+        for (int i = 0; i < Ushm -> totalUsuarios; i++) {
+            if (strcmp(Ushm -> usuarios[i].usr, buscar) == 0) {
+                Ushm -> usuarios[i] = Ushm -> u;
+
+                FILE *original = fopen(ARCHIVO_USR, "r");
+                FILE *temp = fopen("temp_usr.txt", "w");
+
+                if (original && temp) {
+                    char linea[300];
+                    while (fgets(linea, sizeof(linea), original)) {
+                        char usr[100];
+                        sscanf(linea, "%*[^,],%*[^,],%*[^,],%[^,]", usr);
+                        if (strcmp(usr, buscar) == 0) {
+                            fprintf(temp, "%s,%s,%s,%s,%s,\n",
+                                        Ushm->u.nombre, Ushm->u.apellido,
+                                        Ushm->u.correo, Ushm->u.usr, Ushm->u.pass);
+                        } else {
+                            fputs(linea, temp);
+                        }
+                    }
+                    fclose(original);
+                    fclose(temp);
+                    remove(ARCHIVO_USR);
+                    rename("temp_usr.txt", ARCHIVO_USR);
+                }
+                Ushm -> usr_original[0] = '\0';
+                Ushm -> realizado = 1;
+                return;
+            }
+        }
+        Ushm -> realizado = -1;
+
+    } else if (CRUD == 3) {
+        // BORRAR
+        for (int i = 0; i < Ushm -> totalUsuarios; i++) {
+            if (strcmp(Ushm -> usuarios[i].usr, Ushm -> u.usr) == 0) {
+                Ushm -> usuarios[i] = Ushm -> usuarios[Ushm -> totalUsuarios - 1];
+                Ushm -> totalUsuarios--;
+
+                FILE *original = fopen(ARCHIVO_USR, "r");
+                FILE *temp = fopen("temp_usr.txt", "w");
+
+                if (original && temp) {
+                    char linea[300];
+                    while (fgets(linea, sizeof(linea), original)) {
+                        char usr[100];
+                        sscanf(linea, "%*[^,],%*[^,],%*[^,],%[^,]", usr);
+                        if (strcmp(usr, Ushm -> u.usr) != 0) fputs(linea, temp);
+                    }
+                    fclose(original);
+                    fclose(temp);
+                    remove(ARCHIVO_USR);
+                    rename("temp_usr.txt", ARCHIVO_USR);
+                }
+                Ushm -> realizado = 1;
+                return;
+            }
+        }
+        Ushm -> realizado = -1;
+    }
 }
 
 void CRUDcatalogo(listaarticulo catalogo, int CRUD, int BD){
