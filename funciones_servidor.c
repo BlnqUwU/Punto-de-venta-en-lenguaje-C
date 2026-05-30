@@ -1,4 +1,8 @@
-#include "servidor.h"
+#include <complex.h>
+
+#include "listas.h"
+#include "memoria_compartida.h"
+#include "utilidades_back.h"
 
 int BuscarAtributo(char *atributo, char *BD){
     return 0;
@@ -153,8 +157,109 @@ void CRUDusuario(usuarioShm *Ushm, int CRUD){
     }
 }
 
-void CRUDcatalogo(listaarticulo catalogo, int CRUD, int BD){
-    return;
+void CRUDcatalogo(InventarioShm *Ishm, int CRUD, int BD){
+
+    //CATALOGO
+    if (BD == 0) {
+        if (CRUD == 0) {
+            if (Ishm -> totalCatalogo >= MAX_PRODUCTOS) {
+                Ishm -> realizado = -1;
+                return;
+            }
+
+            Ishm -> catalogo[Ishm -> totalCatalogo] = Ishm -> p;
+            Ishm -> totalCatalogo++;
+
+            FILE *archivo = fopen(ARCHIVO_CAT, "a");
+            if (!archivo) { Ishm -> realizado = -1; return; }
+
+            fprintf(archivo, "%s,%d,%.2f,",
+                Ishm->p.producto, Ishm->p.cantidad, Ishm->p.precio);
+            fclose(archivo);
+            Ishm -> realizado = 1;
+        } else if (CRUD == 1) {
+            //LEER
+
+            FILE *archivo = fopen(ARCHIVO_CAT, "r");
+            if (!archivo) { Ishm -> realizado = -1; return; }
+
+            Ishm -> totalCatalogo = 0;
+            char linea[300];
+
+            while (fgets(linea, sizeof(linea), archivo) && Ishm -> totalCatalogo < MAX_PRODUCTOS) {
+                articulo a;
+                char cantidad[20], precio[20];
+                sscanf(linea, "%[^,],%[^,],%[^,\n]", a.producto, cantidad, precio);
+                a.cantidad = atoi(cantidad);
+                a.precio = atof(precio);
+                Ishm -> catalogo[Ishm -> totalCatalogo] = a;
+                Ishm -> totalCatalogo++;
+            }
+            fclose(archivo);
+            Ishm -> realizado = 1;
+        }else if (CRUD == 2) {
+            //ACTUALIZAR
+            for (int i = 0; i < Ishm -> totalCatalogo; i++) {
+                if (strcmp(Ishm -> catalogo[i].producto, Ishm -> p.producto) == 0) {
+                    Ishm -> catalogo[i] = Ishm -> p;
+
+                    FILE *original = fopen(ARCHIVO_CAT, "r");
+                    FILE *temp = fopen("temp_catalo.txt", "w");
+                    if (original && temp) {
+                        char linea[300];
+                        while (fgets(linea, sizeof(linea), original)) {
+                            char nombre[100];
+                            sscanf(linea, "%[^,]", nombre);
+                            if (strcmp(nombre, Ishm -> p.producto) == 0) {
+                                fprintf(temp, "%s,%d,%.2f,",
+                                    Ishm->p.producto, Ishm->p.cantidad, Ishm->p.precio);
+                            } else {
+                                fputs(linea, temp);
+                            }
+                            fclose(temp);
+                            fclose(original);
+                            remove(ARCHIVO_CAT);
+                            rename("temp_catalo.txt", ARCHIVO_CAT);
+                        }
+                        Ishm -> realizado = 1;
+                        return;
+                    }
+                }
+                Ishm -> realizado = -1;
+            }
+        } else if (CRUD == 3) {
+            //BORRAR
+            for (int i = 0; i < Ishm -> totalCatalogo; i++) {
+                if (strcmp(Ishm -> catalogo[i].producto, Ishm -> p.producto) == 0) {
+                    Ishm -> catalogo[i] = Ishm -> catalogo[Ishm -> totalCatalogo - 1];
+                    Ishm -> totalCatalogo--;
+
+                    FILE *original = fopen(ARCHIVO_CAT, "r");
+                    FILE *temp = fopen("temp_catalo.txt", "w");
+
+                    if (original && temp) {
+                        char linea[300];
+                        while (fgets(linea, sizeof(linea), original)) {
+                            char nombre[100];
+                            sscanf(linea, "%[^,]", nombre);
+                            if (strcmp(nombre, Ishm -> p.producto) != 0) {
+                                fputs(linea, temp);
+                            }
+                            fclose(temp);
+                            fclose(original);
+                            remove(ARCHIVO_CAT);
+                            rename("temp_catalo.txt", ARCHIVO_CAT);
+                        }
+                        Ishm -> realizado = 1;
+                        return;
+                    }
+                }
+                Ishm -> realizado = -1;
+            }
+        }
+    } else if (Ishm -> BD == 1) {
+        return;
+    }
 }
 
 void CRUDventas(listaventa ventas, int CRUD){

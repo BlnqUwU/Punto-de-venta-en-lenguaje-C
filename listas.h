@@ -1,6 +1,8 @@
 #ifndef LISTAS_H
 #define LISTAS_H
-#include "utilidades.h"
+#include "utilidades_back.h"
+#undef I
+#undef F
 
 //_____________________________________________________________________________________________
 

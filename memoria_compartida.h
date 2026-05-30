@@ -1,7 +1,7 @@
 #ifndef MEMORIA_COMPARTIDA_H
 #define MEMORIA_COMPARTIDA_H
 
-#include "utilidades.h"
+#include "utilidades_back.h"
 #include "listas.h"
 
 // ──────────────────────────────────────────
@@ -37,6 +37,7 @@ typedef struct {
     int      totalCatalogo;
     articulo p;         // articulo para operacion individual
     int      CRUD;      // 0=crear 1=leer 2=actualizar 3=borrar
+    int BD;             // 0=catalogo, 1=carrito
     int      realizado; // 0=pendiente 1=exito -1=error
 } InventarioShm;
 

@@ -34,7 +34,7 @@ void *atenderPeticion(void *arg) {
 
     if (tipo == 0) {
         // INVENTARIO
-        CRUDcatalogo(NULL, args->Ishm->CRUD, 0);
+        CRUDcatalogo(args -> Ishm, args->Ishm->CRUD, 0);
     } else if (tipo == 1) {
         //USUARIOS
         CRUDusuario(args->Ushm, args->Ushm->CRUD);
@@ -138,10 +138,32 @@ int main() {
     }
 
     // CARGAR INVENTARIO DESDE ARCHIVO (si existe)
-    /*if (cargarInventario(Ishm))
-        printf("[SERVIDOR] Inventario cargado: %d productos.\n", Ishm->totalProductos);
+
+    CRUDcatalogo(Ishm, 1, 0);
+    if (Ishm->totalCatalogo > 0)
+        printf("[SERVIDOR] Catalogo cargado: %d productos.\n", Ishm->totalCatalogo);
     else
-        printf("[SERVIDOR] Inventario nuevo.\n");*/
+        printf("[SERVIDOR] Catalogo vacio o archivo no encontrado.\n");
+
+    //CARGAR USUARIOS
+
+    FILE *fUsr = fopen(ARCHIVO_USR, "r");
+    if (fUsr) {
+        char lineaUsr[300];
+        Ushm->totalUsuarios = 0;
+        while (fgets(lineaUsr, sizeof(lineaUsr), fUsr) && Ushm->totalUsuarios < MAX_USUARIOS) {
+            usuario u;
+            sscanf(lineaUsr, "%[^,],%[^,],%[^,],%[^,],%[^,\n]",
+                   u.nombre, u.apellido, u.correo, u.usr, u.pass);
+            Ushm->usuarios[Ushm->totalUsuarios] = u;
+            Ushm->totalUsuarios++;
+        }
+        fclose(fUsr);
+        printf("[SERVIDOR] Usuarios cargados: %d.\n", Ushm->totalUsuarios);
+    } else {
+        printf("[SERVIDOR] Sin usuarios previos.\n");
+    }
+
 
     // CREAR SEMAFOROS
     semID = semget(keySem, 5, IPC_CREAT | PERMISOS);

@@ -60,7 +60,7 @@ int conectarServidor() {
         return 0;
     }
         //VENTAS
-    shmID3 = shmget(keyShm_venta, sizeof(ventaShm), PERMISOS);
+    shmID3 = shmget(keyShm_venta, sizeof(ventaShm),  PERMISOS);
     if (shmID3 == -1) {
         perror("shmget");
         exit(1);
@@ -112,17 +112,48 @@ void desconectarServidor() {
 
 int enviararticulo(articulo p, int CRUD, int BD){
     //GUARDA ATRIBUTOS EN SHM DE INVENTARIO.
+    //SI CRUD==1 DEBE ESPERAR RESPUESTA DE SERVIDOR Y RETORNAR LA VARIABLE REALIZADO
+    // BD: 0 = Catalogo, 1 = Carrito
 
-    //SI CRUD==1 DEBE ESPERAR RESPUESTA DE SERVIDOR Y RETORNAR LA VARIABLE
-    //REALIZADO 
-    return 0;
+    if (!Ishm) return 0;
+
+    downSem(semID, SEM_INV);
+    Ishm -> p = p;
+    Ishm -> CRUD = CRUD;
+    Ishm->BD        = BD;
+    Ishm->realizado = 0;
+    upSem(semID, SEM_INV);
+
+    Cshm -> tipo = 0;
+    upSem(semID, SEM_REQ);
+    downSem(semID, SEM_ACK);
+
+    return Ishm -> realizado;
 }
 
 listaarticulo ObtenerCatalogo(){
     listaarticulo catalogo;
+    crearlistaarticulo(&catalogo);
+    if (!Ishm) return catalogo;
 
+    downSem(semID, SEM_INV);
+    Ishm -> CRUD = 1;
+    Ishm -> BD = 0;
+    Ishm -> realizado = 0;
+    upSem(semID, SEM_INV);
+
+    Cshm -> tipo = 0;
+    upSem(semID, SEM_REQ);
+    downSem(semID, SEM_ACK);
+
+    downSem(semID, SEM_INV);
+
+    for (int i = 0; i < Ishm -> totalCatalogo; i++) {
+        addarticulo(catalogo -> NE, Ishm -> catalogo[i], catalogo);
+    }
+
+    upSem(semID, SEM_INV);
     //GUARDA EL INVENTARIO DE LA MEMORIA COMPARIDA EN LA LISTA Y LA RETORNA
-
     return catalogo;
 }
 
