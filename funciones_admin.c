@@ -1,19 +1,8 @@
 #include "admin.h"
 #include "listas.h"
+#include "conexionipc.h"
 
 #define ARCHIVO_ADMINS "admins.txt"
-
-// ──────────────────────────────────────────
-// HASH DJB2
-// ──────────────────────────────────────────
-
-void hash(char *input, char *output) {
-    unsigned long h = 5381;
-    int c;
-    while ((c = *input++))
-        h = ((h << 5) + h) + c;
-    sprintf(output, "%lu", h);
-}
 
 // ──────────────────────────────────────────
 // LOGIN ADMIN — 5 CAMPOS
@@ -114,125 +103,37 @@ int SolicitarSesion(usuario a) {
 // ──────────────────────────────────────────
 
 int RegistrarUsuario(usuario u, char *arch) {
-    FILE *archivo = fopen(arch, "a");
-    if (archivo != NULL) {
-        fprintf(archivo, "%s,", strcmp(u.nombre, "") == 0 ? " " : u.nombre);
-        fprintf(archivo, "%s,", strcmp(u.apellido, "") == 0 ? " " : u.apellido);
-        fprintf(archivo, "%s,", u.correo);
-        fprintf(archivo, "%s,", u.usr);
-        fprintf(archivo, "%s,", u.pass);
-        fprintf(archivo, "\n");
-        fclose(archivo);
-        return 1;
-    }
-    return 0;
+
+    return enviarusuario(u, 0, NULL);
 }
 
 int ModificarAtributo(usuario u, char *usr) {
-    char linea[200];
-    FILE *archivo = fopen("usuarios.txt", "r");
-    usuario temp = {"","","","",""};
-    if (archivo == NULL) return 0;
 
-    while (fgets(linea, sizeof(linea), archivo)) {
-        sscanf(linea, "%[^,],%[^,],%[^,],%[^,],%[^,\n]",
-               temp.nombre, temp.apellido, temp.correo, temp.usr, temp.pass);
-        if (strcmp(temp.usr, usr) == 0)
-            RegistrarUsuario(u, "temp.txt");
-        else
-            RegistrarUsuario(temp, "temp.txt");
-    }
-    fclose(archivo);
-    remove("usuarios.txt");
-    rename("temp.txt", "usuarios.txt");
-    return 1;
+    return enviarusuario(u, 2, usr);
 }
 
-int ModificarAtributoCatalogo(usuario u, char *usr) {
-    char linea[200];
-    FILE *archivo = fopen("usuarios.txt", "r");
-    usuario temp = {"","","","",""};
-    if (archivo == NULL) return 0;
+int ModificarAtributoCatalogo(articulo p, char *nombre) {
 
-    while (fgets(linea, sizeof(linea), archivo)) {
-        sscanf(linea, "%[^,],%[^,],%[^,],%[^,],%[^,\n]",
-               temp.nombre, temp.apellido, temp.correo, temp.usr, temp.pass);
-        if (strcmp(temp.usr, usr) == 0)
-            RegistrarUsuario(u, "temp.txt");
-        else
-            RegistrarUsuario(temp, "temp.txt");
-    }
-    fclose(archivo);
-    remove("usuarios.txt");
-    rename("temp.txt", "usuarios.txt");
-    return 1;
+    return enviararticulo(p, 2, 0);
 }
 
 int BorrarUsuario(usuario a, char *usr){
-    //solicitar a servidor borrar este usuario
-    //si lo borra retorna 1 si no retorna 0
-    return 0;
+
+    return enviarusuario(a, 3, NULL);
 }
 
 // ──────────────────────────────────────────
 // OBTENER LISTAS
 // ──────────────────────────────────────────
 
-lista ObtenerUsuarios() {
-    char linea[200];
-    FILE *archivo = fopen("usuarios.txt", "r");
-    lista usuarios;
-    crearlista(&usuarios);
-    usuario user = {"","","","",""};
-    info usr;
-    int cont = 0;
-
-    if (archivo == NULL) return 0;
-
-    while (fgets(linea, sizeof(linea), archivo)) {
-        sscanf(linea, "%[^,],%[^,],%[^,],%[^,],%[^,\n]",
-               user.nombre, user.apellido, user.correo, user.usr, user.pass);
-        usr.a = user;
-        add(cont, usr, usuarios);
-        cont++;
-    }
-    fclose(archivo);
-    return usuarios;
-}
-
 listaarticulo ObtenerProductos() {
-    char linea[200];
-    FILE *archivo = fopen("catalogo.txt", "r");
-    listaarticulo productos;
-    crearlistaarticulo(&productos);
-    producto prod_temp = {"", 0, 0};
-    producto fin;
-    int cont = 0;
-    char cantidad[50], precio[50];
 
-    if (archivo == NULL) return 0;
-
-    while (fgets(linea, sizeof(linea), archivo)) {
-        sscanf(linea, "%[^,],%[^,],%[^,\n]",
-               prod_temp.producto, cantidad, precio);
-        prod_temp.cantidad = atoi(cantidad);
-        prod_temp.precio   = atof(precio);
-        fin.p = prod_temp;
-        addproducto(cont, fin, productos);
-        cont++;
-    }
-    fclose(archivo);
-    return productos;
+    return ObtenerCatalogo();
 }
 
-int RegistrarProducto(prod u, char *arch) {
-    FILE *archivo = fopen(arch, "a");
-    if (archivo != NULL) {
-        fprintf(archivo, "%s,%d,%f,\n", u.p.producto, u.p.cantidad, u.p.precio);
-        fclose(archivo);
-        return 1;
-    }
-    return 0;
+int RegistrarProducto(articulo p, char *arch) {
+
+    return enviararticulo(p, 0, 0);
 }
 
 int VerificarCorreo(char *correo) {
@@ -247,64 +148,45 @@ int VerificarCorreo(char *correo) {
 }
 
 int BuscarCorreo(char *correo) {
-    char linea[100];
-    FILE *archivo = fopen("usuarios.txt", "r");
-    if (archivo != NULL) {
-        while (fgets(linea, sizeof(linea), archivo)) {
-            char *token = strtok(linea, ",");
-            token = strtok(NULL, ",");
-            token = strtok(NULL, ",");
-            while (token != NULL) {
-                if (strcmp(token, correo) == 0) {
-                    fclose(archivo);
-                    return 1;
-                }
-                token = strtok(NULL, ",");
-            }
+
+    lista usuarios = ObtenerUsuarios();
+    for (int i = 0; i < usuarios->NE; i++) {
+        info inf = get(i, usuarios);
+        if (strcmp(inf.u.correo, correo) == 0) {
+            liberarlista(&usuarios);
+            return 1;
         }
-        fclose(archivo);
     }
+    liberarlista(&usuarios);
     return 0;
 }
 
 int BuscarUsuario(char *usr) {
-    char linea[100];
-    FILE *archivo = fopen("usuarios.txt", "r");
-    if (archivo != NULL) {
-        while (fgets(linea, sizeof(linea), archivo)) {
-            char *token = strtok(linea, ",");
-            token = strtok(NULL, ",");
-            token = strtok(NULL, ",");
-            token = strtok(NULL, ",");
-            while (token != NULL) {
-                if (strcmp(token, usr) == 0) {
-                    fclose(archivo);
-                    return 1;
-                }
-                token = strtok(NULL, ",");
-            }
+
+    lista usuarios = ObtenerUsuarios();
+    for (int i = 0; i < usuarios->NE; i++) {
+        info inf = get(i, usuarios);
+        if (strcmp(inf.u.usr, usr) == 0) {
+            liberarlista(&usuarios);
+            return 1;
         }
-        fclose(archivo);
     }
+    liberarlista(&usuarios);
     return 0;
+
 }
 
 int BuscarProducto(char *producto) {
-    char linea[100];
-    FILE *archivo = fopen("catalogo.txt", "r");
-    if (archivo != NULL) {
-        while (fgets(linea, sizeof(linea), archivo)) {
-            char *token = strtok(linea, ",");
-            while (token != NULL) {
-                if (strcmp(token, producto) == 0) {
-                    fclose(archivo);
-                    return 1;
-                }
-                token = strtok(NULL, ",");
-            }
+
+    listaarticulo cat = ObtenerCatalogo();
+    for (int i = 0; i < cat->NE; i++) {
+        articulo a = getarticulo(i, cat);
+        if (strcmp(a.producto, producto) == 0) {
+            liberarlistaarticulo(&cat);
+            return 1;
         }
-        fclose(archivo);
     }
+    liberarlistaarticulo(&cat);
     return 0;
 }
 
@@ -313,41 +195,16 @@ int BuscarProducto(char *producto) {
 // ──────────────────────────────────────────
 
 void cargarVentasPorRango(listaventa lv, int dias) {
-    FILE *f = fopen("ventas.txt", "r");
-    if (!f) return;
 
-    time_t ahora = time(NULL);
-    char linea[200];
-    int cont = 0;
+    int tipo = 0; // diario
+    if (dias == 7)  tipo = 1; // semanal
+    if (dias == 30) tipo = 2; // mensual
 
-    while (fgets(linea, sizeof(linea), f)) {
-        char usr[100], fecha[20];
-        float total;
-
-        // formato: usr,total,DD/MM/YYYY HH:MM
-        sscanf(linea, "%[^,],%f,%[^\n]", usr, &total, fecha);
-
-        // parsear fecha
-        struct tm tm_venta = {0};
-        sscanf(fecha, "%d/%d/%d %d:%d",
-               &tm_venta.tm_mday, &tm_venta.tm_mon,
-               &tm_venta.tm_year, &tm_venta.tm_hour, &tm_venta.tm_min);
-        tm_venta.tm_mon  -= 1;    // tm_mon va de 0-11
-        tm_venta.tm_year -= 1900; // tm_year desde 1900
-        tm_venta.tm_isdst = -1;
-
-        time_t t_venta = mktime(&tm_venta);
-        double diff = difftime(ahora, t_venta);
-
-        // filtrar por rango en segundos
-        if (diff >= 0 && diff <= dias * 86400.0) {
-            infoventa iv;
-            iv.v.total = total;
-            strncpy(iv.v.fecha, fecha, sizeof(iv.v.fecha) - 1);
-            iv.v.fecha[sizeof(iv.v.fecha) - 1] = '\0';
-            addventa(cont, iv, lv);
-            cont++;
-        }
+    listaventa ventas = obtenerVentas(tipo);
+    // copiar ventas a lv
+    for (int i = 0; i < ventas->NE; i++) {
+        infoventa iv = getventa(i, ventas);
+        addventa(lv->NE, iv, lv);
     }
-    fclose(f);
+    liberarlistaventa(&ventas);
 }

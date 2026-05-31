@@ -211,16 +211,16 @@ void CRUDcatalogo(InventarioShm *Ishm, int CRUD, int BD){
                             char nombre[100];
                             sscanf(linea, "%[^,]", nombre);
                             if (strcmp(nombre, Ishm -> p.producto) == 0) {
-                                fprintf(temp, "%s,%d,%.2f,",
+                                fprintf(temp, "%s,%d,%.2f,\n",
                                     Ishm->p.producto, Ishm->p.cantidad, Ishm->p.precio);
                             } else {
                                 fputs(linea, temp);
                             }
-                            fclose(temp);
-                            fclose(original);
-                            remove(ARCHIVO_CAT);
-                            rename("temp_catalo.txt", ARCHIVO_CAT);
                         }
+                        fclose(temp);
+                        fclose(original);
+                        remove(ARCHIVO_CAT);
+                        rename("temp_catalo.txt", ARCHIVO_CAT);
                         Ishm -> realizado = 1;
                         return;
                     }
@@ -245,11 +245,11 @@ void CRUDcatalogo(InventarioShm *Ishm, int CRUD, int BD){
                             if (strcmp(nombre, Ishm -> p.producto) != 0) {
                                 fputs(linea, temp);
                             }
-                            fclose(temp);
-                            fclose(original);
-                            remove(ARCHIVO_CAT);
-                            rename("temp_catalo.txt", ARCHIVO_CAT);
                         }
+                        fclose(temp);
+                        fclose(original);
+                        remove(ARCHIVO_CAT);
+                        rename("temp_catalo.txt", ARCHIVO_CAT);
                         Ishm -> realizado = 1;
                         return;
                     }
@@ -262,10 +262,78 @@ void CRUDcatalogo(InventarioShm *Ishm, int CRUD, int BD){
     }
 }
 
-void CRUDventas(listaventa ventas, int CRUD){
-    return;
-}
+void CRUDventas(ventaShm *Vshm, int CRUD){
 
+    // 0=crear, 1=leer
+
+    if (CRUD == 0) {
+        if (Vshm -> totalVentas >= MAX_VENTAS) {
+            Vshm -> realizado = -1;
+            return;
+        }
+
+        time_t t = time(NULL);
+        struct tm *tm_info = localtime(&t);
+        char fecha[20];
+        strftime(fecha, sizeof(fecha), "%d/%m/%Y %H:%M", tm_info);
+        strncpy(Vshm->v.fecha, fecha, sizeof(Vshm->v.fecha) - 1);
+
+        Vshm -> ventas[Vshm -> totalVentas] = Vshm -> v;
+        Vshm -> totalVentas++;
+
+        FILE *archivo = fopen(ARCHIVO_VD, "a");
+        if (archivo) {
+            fprintf(archivo, "%s,%.2f,%s,",
+                    Vshm->v.u.usr, Vshm->v.total, fecha);
+
+            fclose(archivo);
+        }
+        Vshm -> realizado = 1;
+    } else if (CRUD == 1) {
+        // tipo: 0=diario 1=semanal 2=mensual
+
+        int dias = 1;
+        if (Vshm -> tipo == 1) dias = 7;
+        else if (Vshm -> tipo == 2) dias = 30;
+
+        char *archivo_ventas = ARCHIVO_VD;
+
+        FILE *archivo = fopen(archivo_ventas, "r");
+        if (!archivo) {Vshm -> totalVentas = 0; Vshm -> realizado = 1; return;}
+
+        Vshm -> totalVentas = 0;
+        char linea[300];
+        time_t ahora = time(NULL);
+
+        while (fgets(linea, sizeof(linea), archivo) && Vshm->totalVentas < MAX_VENTAS) {
+            char usr[100], fecha[20];
+            float total;
+            sscanf(linea, "%[^,],%f,%[^,]", usr, &total, fecha);
+
+            struct tm tm_venta = {0};
+            sscanf(fecha, "%d/%d/%d %d:%d",
+                   &tm_venta.tm_mday, &tm_venta.tm_mon,
+                   &tm_venta.tm_year, &tm_venta.tm_hour, &tm_venta.tm_min);
+            tm_venta.tm_mon  -= 1;
+            tm_venta.tm_year -= 1900;
+            tm_venta.tm_isdst = -1;
+
+            time_t t_venta = mktime(&tm_venta);
+            double diff = difftime(ahora, t_venta);
+
+            if (diff >= 0 && diff <= dias * 86400.0) {
+                venta v;
+                v.total = total;
+                strncpy(v.u.usr, usr, sizeof(v.u.usr) - 1);
+                strncpy(v.fecha, fecha, sizeof(v.fecha) - 1);
+                Vshm->ventas[Vshm->totalVentas] = v;
+                Vshm->totalVentas++;
+            }
+        }
+        fclose(archivo);
+        Vshm->realizado = 1;
+    }
+}
 
 // ──────────────────────────────────────────
 // ENCRIPTACION XOR

@@ -13,10 +13,10 @@
 #include <time.h>
 #include <ctype.h>
 
-#ifndef UTILS_H
+// CAMBIO: enums definidos aqui solo para el servidor
+// el front usa utilidades.h que ya los define
 typedef enum mens { NO_MEMORY, OKE, INDEXOUTOFBOUND, EMPTY } mensaje;
 typedef enum bo   { FALSO, TRU } booleano;
-#endif
 
 void downSem(int semID, unsigned short idx);
 void upSem(int semID, unsigned short idx);

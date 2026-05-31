@@ -298,7 +298,7 @@ void EditarUsuario(usuario user){
                         strcpy(user.correo, "");
                         clrtoeol();
                         cor=1;
-                    }else if (enviarusuario((usuario)user,1) == 1) {
+                    }else if (enviarusuario((usuario)user,1, NULL) == 1) {
                         move((LINES/2)+11, 0);
                         clrtoeol();
                         move((LINES/2)+12, 0);
@@ -322,7 +322,7 @@ void EditarUsuario(usuario user){
                     clrtoeol();
                     getstr (user.usr);
                     noecho();
-                    if (enviarusuario(user,1) == 1) {
+                    if (enviarusuario(user,1, NULL) == 1) {
                         move((LINES/2)+11, 0);
                         clrtoeol();
                         move((LINES/2)+12, 0);
@@ -351,7 +351,7 @@ void EditarUsuario(usuario user){
 
                             break;
                         }else{
-                            if (enviarusuario(user,2) == 1) { //mandar registro a servidor (funcion en funciones_cliente)
+                            if (enviarusuario(user,2, NULL) == 1) { //mandar registro a servidor (funcion en funciones_cliente)
                                 mvprintw(3, 10, "Cambios registrados.");
                                 getch();
                                 clear();
@@ -366,7 +366,7 @@ void EditarUsuario(usuario user){
                     case 5:
                         curs_set(0);
                         clear();
-                        if (enviarusuario(user,3) == 1) { //mandar registro a servidor (funcion en funciones_cliente)
+                        if (enviarusuario(user, 3, NULL) == 1) { //mandar registro a servidor (funcion en funciones_cliente)
                             mvprintw(3, 10, "Cambios registrados.");
                             getch();
                             clear();
@@ -406,7 +406,7 @@ void VentaDiaria(){
 
     //insertar VENTA DIARIA  de memoria compartida a lista
 
-    //cat=ObtenerProductos();
+    cat=ObtenerCatalogo();
     articulo elegido;
     set_escdelay(0);
     noecho();
@@ -417,7 +417,7 @@ void VentaDiaria(){
     while(1) {
         curs_set(0);
         clear();
-        //cat=ObtenerProductos();
+        cat=ObtenerCatalogo();
         int n=cat->NE;
         int salir=0;
 
@@ -1126,7 +1126,7 @@ void iniciarSesion() {
                     hash(pass, hash_pass);
                     strncpy(user.pass, hash_pass, sizeof(user.pass));
 
-                    if(solicitarSesion(user) == 1) { //pedir la sesion al servidor (funcion en funciones_cliente), si usuario existe en base de datos entra al menu principal
+                    if(solicitarSesionAdmin(user) == 1) { //pedir la sesion al servidor (funcion en funciones_cliente), si usuario existe en base de datos entra al menu principal
                         clear();
                         MenuPrincipal(user.usr);
                         return;

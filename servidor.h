@@ -38,7 +38,7 @@ lista EnviarUsuarios();
 // ──────────────────────────────────────────
 void CRUDusuario(usuarioShm *Ushm, int CRUD);
 void CRUDcatalogo(InventarioShm *Ishm, int CRUD, int BD);
-void CRUDventas(listaventa ventas, int CRUD);
+void CRUDventas(ventaShm *Vshm, int CRUD);
 
 
 #endif

@@ -125,11 +125,14 @@ void Carrito(usuario u){
                     clear();
 
                     //mandar totalpagar a servidor para reporte de venta
-                    venta v ={totalpagar,u, fecha};
+                    venta v;;
+                    v.total = totalpagar;
+                    v.u = u;
+                    strncpy(v.fecha, fecha, sizeof(v.fecha) - 1);
                     enviarVenta(v);
 
                     if(!emptyarticulo(carrito)){ //verifica si el carrito esta vacio
-                        Vaciarlistaarticulo(carrito); //elimina los elementos del carrito
+                        limpiarCarrito(); //elimina los elementos del carrito
                         ImprimirCentrado(LINES/2, "Carrito pagado con exito.");
                         getch();
                         opcion=0;
@@ -170,17 +173,19 @@ void Carrito(usuario u){
                                 elegido.cantidad=elegido.cantidad-cantidad;
                                 if(elegido.cantidad==0){ //si se quita toda la cantidad del carrito entonces lo quita del carrito y lo añade al catalogo
                                     enviararticulo(elegido, 3,1);
-                                    elegido.cantidad=cantidad;
-                                    enviararticulo(elegido, 0,0);
+                                    articulo devolver = elegido;
+                                    devolver.cantidad = obtenerCantidadCatalogo(elegido.producto) + cantidad;
+                                    enviararticulo(elegido, 2,0);
 
                                     
                                     /*borrararticulo(opcion, carritoGlobal);
                                     addarticulo(opcion,elegido,cat);
                                     devolverExistencias(elegido.producto, cantidad); // ← falta*/
                                 }else { 
-                                    enviararticulo(elegido, 3, 1);
-                                    /*setarticulo(opcion, elegido, carritoGlobal);//actualiza la cantidad de elementos del producto en el carrito
-                                    devolverExistencias(elegido.producto, cantidad);*/
+                                    enviararticulo(elegido, 2, 1);
+                                    articulo devolver2 = elegido;
+                                    devolver2.cantidad = obtenerCantidadCatalogo(elegido.producto) + cantidad;
+                                    enviararticulo(elegido, 2,0);
                                 }
                             
                                 salir=1;
@@ -329,25 +334,12 @@ void Catalogo(usuario u){
                             
                             case 10:
                                 elegido.cantidad=elegido.cantidad-cantidad;
-                                if(elegido.cantidad==0){//si se seleccionaron todos los elementos disponibles, lo borra del catalogo y lo añade al carrito
-                                    enviararticulo(elegido, 3, 0);
-                                    elegido.cantidad=cantidad;
-                                    enviararticulo(elegido, 0, 1);
-                                    /*borrararticulo(opcion, cat);
-                                    addarticulo(carrito->NE,elegido,carrito);*/
-                                }else { //actualiza los elementos en el catalogo y añade la cantidad del producto seleccionado al carrito
-                                    enviararticulo(elegido, 2, 0);
-                                    elegido.cantidad=cantidad;
-                                    enviararticulo(elegido, 0, 1);
-                                    
-                                    /*setarticulo(opcion, elegido, cat);
-                                    //actualizar catalogo servidor
-                                    actualizarExistencias(elegido.producto, cantidad);
-                                    elegido.cantidad=cantidad;
-                                    addarticulo(carritoGlobal->NE,elegido,carritoGlobal);*/
-                                }
-                            
+                                enviararticulo(elegido, 2, 0);
+                                elegido.cantidad=cantidad;
+                                enviararticulo(elegido, 0, 1);
+
                                 salir=1;
+
                             break;
                             case 27:
                             liberarlistaarticulo(&cat);

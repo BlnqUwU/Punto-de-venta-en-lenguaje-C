@@ -40,7 +40,7 @@ void *atenderPeticion(void *arg) {
         CRUDusuario(args->Ushm, args->Ushm->CRUD);
     } else if (tipo == 2) {
         // VENTAS
-        CRUDventas(NULL, args->Vshm->CRUD);
+        CRUDventas(args -> Vshm, args->Vshm->CRUD);
     }
 
     upSem(args->semID, SEM_ACK);

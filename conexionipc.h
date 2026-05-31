@@ -13,8 +13,10 @@ void desconectarServidor();
 // ──────────────────────────────────────────
 
 int enviararticulo(articulo p, int CRUD, int BD); // 0 catalogo, 1 carrito
+int obtenerCantidadCatalogo(char *producto);
 listaarticulo ObtenerCatalogo();
 listaarticulo ObtenerCarrito();
+void limpiarCarrito();
 
 
 int enviarusuario(usuario u, int CRUD, char *nombreUsuario); //lee llaves primarias (usuario correo)

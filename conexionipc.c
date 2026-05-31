@@ -10,6 +10,7 @@
 // ──────────────────────────────────────────
 
 static InventarioShm *Ishm   = NULL;
+static listaarticulo carritoLocal = NULL;
 static usuarioShm *Ushm   = NULL;
 static ventaShm *Vshm   = NULL;
 static ControlShm *Cshm   = NULL;
@@ -115,6 +116,42 @@ int enviararticulo(articulo p, int CRUD, int BD){
     //SI CRUD==1 DEBE ESPERAR RESPUESTA DE SERVIDOR Y RETORNAR LA VARIABLE REALIZADO
     // BD: 0 = Catalogo, 1 = Carrito
 
+    if (BD == 1) {
+        if (carritoLocal == NULL) crearlistaarticulo(&carritoLocal);
+
+        if (CRUD == 0) {
+            for (int i = 0; i < carritoLocal -> NE; i++) {
+                articulo a = getarticulo(i, carritoLocal);
+
+                if (strcmp(a.producto, p.producto) == 0) {
+                    a.cantidad += p.cantidad;
+                    setarticulo(i, a, carritoLocal);
+                    return 1;
+                }
+            }
+            addarticulo(carritoLocal -> NE, p, carritoLocal);
+        } else if (CRUD == 2) {
+            for (int i = 0; i < carritoLocal -> NE; i++) {
+                articulo a = getarticulo(i, carritoLocal);
+                if (strcmp(a.producto, p.producto) == 0) {
+                    setarticulo(i, p, carritoLocal);
+                    return 1;
+                }
+            }
+        }else if (CRUD == 3) {
+            for (int i = 0; i < carritoLocal -> NE; i++) {
+                articulo a = getarticulo(i, carritoLocal);
+                if (strcmp(a.producto, p.producto) == 0) {
+                    borrararticulo(i, carritoLocal);
+                    return 1;
+                }
+            }
+        }
+        return 1;
+    }
+
+    //BD = 0 - CATALOGO
+
     if (!Ishm) return 0;
 
     downSem(semID, SEM_INV);
@@ -129,6 +166,15 @@ int enviararticulo(articulo p, int CRUD, int BD){
     downSem(semID, SEM_ACK);
 
     return Ishm -> realizado;
+}
+
+int obtenerCantidadCatalogo(char *producto) {
+
+    if (!Ishm) return 0;
+    for (int i = 0; i < Ishm->totalCatalogo; i++)
+        if (strcmp(Ishm->catalogo[i].producto, producto) == 0)
+            return Ishm->catalogo[i].cantidad;
+    return 0;
 }
 
 listaarticulo ObtenerCatalogo(){
@@ -157,12 +203,19 @@ listaarticulo ObtenerCatalogo(){
     return catalogo;
 }
 
+
+void limpiarCarrito() {
+    if (carritoLocal != NULL) {
+        Vaciarlistaarticulo(carritoLocal);
+        free(carritoLocal);
+        carritoLocal = NULL;
+    }
+}
+
 listaarticulo ObtenerCarrito(){
-    listaarticulo carrito;
 
-    //GUARDA EL INVENTARIO DE LA MEMORIA COMPARIDA EN LA LISTA Y LA RETORNA
-
-    return carrito;
+    if (carritoLocal == NULL) crearlistaarticulo(&carritoLocal);
+    return carritoLocal;
 }
 
 int enviarusuario(usuario u, int CRUD, char *nombreUsuario){
@@ -262,14 +315,45 @@ lista ObtenerUsuarios(){
 }
 
 listaventa obtenerVentas(int tipo){
-    listaventa ventas;
 
-    //ENVIA AL SERVIDOR EL ARGUMENTO Y RECIBE UNA LISTA CON LAS VENTAS SEGUN EL TIPO
+    // tipo: 0=diario, 1=semanal, 3=mensual
+    listaventa ventas;
+    crearlistaventa(&ventas);
+    if (!Vshm) return ventas;
+
+    downSem(semID, SEM_VTA);
+    Vshm -> tipo = tipo;
+    Vshm -> CRUD = 1;
+    Vshm -> realizado = 0;
+    upSem(semID, SEM_VTA);
+
+    Cshm -> tipo = 2;
+    upSem(semID, SEM_REQ);
+    downSem(semID, SEM_ACK);
+
+    downSem(semID, SEM_VTA);
+    for (int i = 0; i < Vshm -> totalVentas; i++) {
+        infoventa iv;
+        iv.v = Vshm -> ventas[i];
+        addventa(ventas -> NE, iv, ventas);
+    }
+    upSem(semID, SEM_VTA);
 
     return ventas;
 }
 
 void enviarVenta(venta v){
-    //GUARDA LA VENTA EN LA MEMORIA COMPARTIDA Y LA MANDA AL SERVIDOR
-    return;
+
+    if (!Vshm) return;
+
+    downSem(semID, SEM_VTA);
+    Vshm -> v = v;
+    Vshm -> CRUD = 0;
+    Vshm -> realizado = 0;
+    upSem(semID, SEM_VTA);
+
+    Cshm -> tipo = 2;
+    upSem(semID, SEM_REQ);
+    downSem(semID, SEM_ACK);
+
 }
