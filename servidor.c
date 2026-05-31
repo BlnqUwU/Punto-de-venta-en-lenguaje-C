@@ -46,11 +46,6 @@ void *atenderPeticion(void *arg) {
     upSem(args->semID, SEM_ACK);
     return NULL;
 
-
-    // LEER PETICION DESDE MEMORIA COMPARTIDA
-
-    // POR AHORA SOLO CONFIRMA RECEPCION
-    // AQUI SE EXPANDIRA CON LOGICA DE VENTA
 }
 
 void limpiar(int sig) {
@@ -77,6 +72,7 @@ int main() {
     key_t keyShm_usr = ftok(ARCHIVO_IPC, 'U');
     key_t keyShm_venta = ftok(ARCHIVO_IPC, 'V');
     key_t keyShm_ctrl = ftok(ARCHIVO_IPC, 'C');
+
     key_t keySem = ftok(ARCHIVO_IPC, 'S');
     if (keyShm == -1 || keySem == -1) {
         perror("ftok");
@@ -176,8 +172,8 @@ int main() {
     // SEM_INV  = 1 -> inventario libre
     // SEM_USR  = 1 -> usuarios libre
     // SEM_VTA  = 1 -> ventas libre
-    // SEM_REQ  = 0 -> sin peticiones
-    // SEM_ACK  = 0 -> sin respuestas
+    // SEM_REQ  = 0 -> sin peticiones //peticiones de usuarios
+    // SEM_ACK  = 0 -> sin respuestas   //avisa si servidor esta libre
 
     union semun arg;
     arg.val = 1; semctl(semID, SEM_INV, SETVAL, arg);

@@ -41,8 +41,9 @@ void GenerarReportes();
 #include "utilidades.h"
 #include "conexionipc.h"
 
-typedef usuario * admin;
-typedef articulo * producto;
+//typedef usuario * admin;
+//
+// typedef articulo * producto;
 
 //_____________________________________________________________________________________________
 

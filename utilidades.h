@@ -23,8 +23,8 @@ void downSem(int semID, unsigned short idx);
 void upSem(int semID, unsigned short idx);
 
 #ifndef UTILS_BACK_H
-typedef  enum mens { NO_MEMORY , OKE , INDEXOUTOFBOUND, EMPTY } mensaje;
-typedef  enum bo { FALSO , TRU } booleano;
+//typedef  enum mens { NO_MEMORY , OKE , INDEXOUTOFBOUND, EMPTY } mensaje;
+//typedef  enum bo { FALSO , TRU } booleano;
 #endif
 
 void ImprimirCentrado(int fila, const char *texto);
