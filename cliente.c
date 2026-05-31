@@ -2,8 +2,6 @@
 #include "conexionipc.h"
 #include "listas.h"
 
-listaarticulo carritoGlobal;
-
 void Carrito(usuario u){
     int opcion = 0;
     int tecla,tecla2;
@@ -15,13 +13,15 @@ void Carrito(usuario u){
     };
     int m= sizeof(menu)/sizeof(menu[0]);
     
-    listaarticulo cat;
-    crearlistaarticulo(&cat);
+    listaarticulo carrito;
+    crearlistaarticulo(&carrito);
 
     time_t t = time(NULL);
     struct tm *tm_info = localtime(&t);
     char fecha[20];
     strftime(fecha, sizeof(fecha), "%d/%m/%Y %H:%M", tm_info);
+
+    carrito=ObtenerCarrito();
 
     articulo elegido;
     articulo auxtotal;
@@ -34,7 +34,8 @@ void Carrito(usuario u){
     while(1) {
         curs_set(0);
         clear();
-        int n=carritoGlobal->NE;
+        carrito=ObtenerCarrito();
+        int n=carrito->NE;
         int salir=0;
         float totalpagar=0;
         
@@ -57,10 +58,10 @@ void Carrito(usuario u){
             pos = 0;
         }
 
-        if(!emptyarticulo(carritoGlobal)){ //verifica si el carrito esta vacio
+        if(!emptyarticulo(carrito)){ //verifica si el carrito esta vacio
             //imprime el carrito
         for (int i = pos; i < n && (i - pos) < 30; i++) {
-            articulo ac = getarticulo(i, carritoGlobal);
+            articulo ac = getarticulo(i, carrito);
             int fila = (LINES / 2) - (30 / 2) + (i - pos);
 
             move(fila, 0);
@@ -78,8 +79,8 @@ void Carrito(usuario u){
             attroff(A_REVERSE);
         }
         //calcula el total a pagar del carrito
-        for(int i=0; i<carritoGlobal->NE; i++){
-            auxtotal=getarticulo(i,carritoGlobal);
+        for(int i=0; i<carrito->NE; i++){
+            auxtotal=getarticulo(i,carrito);
             totalpagar+=auxtotal.precio*auxtotal.cantidad;
         }
         
@@ -117,18 +118,21 @@ void Carrito(usuario u){
 
             case 10: // ENTER
                 if(opcion==n+1){ //salir seleccionado
-                    liberarlistaarticulo(&cat);
+                    liberarlistaarticulo(&carrito);
                     return;
                 }else if(opcion==n){ //pagar carrito seleccionado
                     curs_set(0);
                     clear();
 
                     //mandar totalpagar a servidor para reporte de venta
-                    venta v ={totalpagar,u, fecha};
+                    venta v;;
+                    v.total = totalpagar;
+                    v.u = u;
+                    strncpy(v.fecha, fecha, sizeof(v.fecha) - 1);
                     enviarVenta(v);
 
-                    if(!emptyarticulo(carritoGlobal)){ //verifica si el carrito esta vacio
-                        Vaciarlistaarticulo(carritoGlobal); //elimina los elementos del carrito
+                    if(!emptyarticulo(carrito)){ //verifica si el carrito esta vacio
+                        limpiarCarrito(); //elimina los elementos del carrito
                         ImprimirCentrado(LINES/2, "Carrito pagado con exito.");
                         getch();
                         opcion=0;
@@ -140,7 +144,7 @@ void Carrito(usuario u){
                     }
                     
                 }else{ //cualquier elemento del carrito elegido
-                    elegido= getarticulo(opcion,carritoGlobal);
+                    elegido= getarticulo(opcion,carrito);
                     curs_set(0);
                     clear();
                     mvprintw(LINES/2, (COLS/2)-strlen("Cuantas unidades de  desea quitar del carrito?: "), 
@@ -168,22 +172,26 @@ void Carrito(usuario u){
                             case 10:
                                 elegido.cantidad=elegido.cantidad-cantidad;
                                 if(elegido.cantidad==0){ //si se quita toda la cantidad del carrito entonces lo quita del carrito y lo añade al catalogo
-                                    enviararticulo(elegido, 4);
-                                    enviararticulo(elegido, 2);
+                                    enviararticulo(elegido, 3,1);
+                                    articulo devolver = elegido;
+                                    devolver.cantidad = obtenerCantidadCatalogo(elegido.producto) + cantidad;
+                                    enviararticulo(elegido, 2,0);
+
                                     
                                     /*borrararticulo(opcion, carritoGlobal);
                                     addarticulo(opcion,elegido,cat);
                                     devolverExistencias(elegido.producto, cantidad); // ← falta*/
                                 }else { 
-                                    setarticulo(opcion, elegido, carritoGlobal);//actualiza la cantidad de elementos del producto en el carrito
-                                    devolverExistencias(elegido.producto, cantidad);
-
+                                    enviararticulo(elegido, 2, 1);
+                                    articulo devolver2 = elegido;
+                                    devolver2.cantidad = obtenerCantidadCatalogo(elegido.producto) + cantidad;
+                                    enviararticulo(elegido, 2,0);
                                 }
                             
                                 salir=1;
                             break;
                             case 27:// se preciono la tecla esc
-                                liberarlistaarticulo(&cat);
+                                liberarlistaarticulo(&carrito);
                                 endwin();
                             return;
                         }
@@ -192,7 +200,7 @@ void Carrito(usuario u){
             break;
             
             case 27://se preciono la tecla esc
-            liberarlistaarticulo(&cat);
+            liberarlistaarticulo(&carrito);
             endwin();
             
             return;
@@ -207,6 +215,7 @@ void Catalogo(usuario u){
 
     listaarticulo cat;
     crearlistaarticulo(&cat);
+
     char *menu[] = {
         "Salir"
     };
@@ -215,7 +224,7 @@ void Catalogo(usuario u){
      //insertar catalogo de memoria compartida a lista
     //cargarCatalogo(cat);
     cat=ObtenerCatalogo();
-    
+
     articulo elegido;
     set_escdelay(0);
     noecho();
@@ -325,20 +334,15 @@ void Catalogo(usuario u){
                             
                             case 10:
                                 elegido.cantidad=elegido.cantidad-cantidad;
-                                if(elegido.cantidad==0){//si se seleccionaron todos los elementos disponibles, lo borra del catalogo y lo añade al carrito
-                                    borrararticulo(opcion, cat);
-                                    addarticulo(carritoGlobal->NE,elegido,carritoGlobal);
-                                }else { //actualiza los elementos en el catalogo y añade la cantidad del producto seleccionado al carrito
-                                    setarticulo(opcion, elegido, cat);
-                                    //actualizar catalogo servidor
-                                    actualizarExistencias(elegido.producto, cantidad);
-                                    elegido.cantidad=cantidad;
-                                    addarticulo(carritoGlobal->NE,elegido,carritoGlobal);
-                                }
-                            
+                                enviararticulo(elegido, 2, 0);
+                                elegido.cantidad=cantidad;
+                                enviararticulo(elegido, 0, 1);
+
                                 salir=1;
+
                             break;
                             case 27:
+                            liberarlistaarticulo(&cat);
                                 endwin();
                             break;
                         }
@@ -375,6 +379,8 @@ int Perfil(usuario u){
     int n = sizeof(menu)/sizeof(menu[0]);
 
     usuario login = obtenerUsuario(u);
+    char usr_original[100];
+    strncpy(usr_original, login.usr, sizeof(usr_original) - 1);
     char aux[100];
 
     char *DatosUsuario[]={
@@ -531,7 +537,7 @@ int Perfil(usuario u){
                     case 5://guardar datos elegido
                         curs_set(0);
                         clear();
-                        if(ModificarAtributo(login, usr)){ //mandar modificaciones al servidor (funcion en funciones_cliente)
+                        if(enviarusuario(login, 2, usr_original)){ //mandar modificaciones al servidor (funcion en funciones_cliente)
                             ImprimirCentrado(LINES/2, "Cambios Guardados con exito, vuelve a iniciar sesion.");
                             getch();
                             clear();
@@ -847,7 +853,7 @@ void registrar() {
                             
                             break;
                         }else{
-                            if (RegistrarUsuario(user,"usuarios.txt") == 1) { //mandar registro a servidor (funcion en funciones_cliente)
+                            if (enviarusuario(user, 0, NULL) == 1) { //mandar registro a servidor (funcion en funciones_cliente)
                                 mvprintw(3, 10, "Registro Exitoso");
                                 getch();
                                 clear();
@@ -967,9 +973,9 @@ void iniciarSesion() {
                     hash(pass, hash_pass);
                     strncpy(user.pass, hash_pass, sizeof(user.pass));
 
-                    if(cargarUsuario(user) == 1) { //pedir la sesion al servidor (funcion en funciones_cliente), si usuario existe en base de datos entra al menu principal
+                    if(solicitarSesion(user) == 1) { //pedir la sesion al servidor (funcion en funciones_cliente), si usuario existe en base de datos entra al menu principal
                         clear();
-                        MenuPrincipal(user);
+                        MenuPrincipal(obtenerUsuario(user));
                         return;
                     }else{
                         strcpy(user.usr, "");
@@ -1087,12 +1093,11 @@ void menu() {
 }
 
 int main() {
-    if (conectarServidor() == 0) {
-        return 1;
+    if (!conectarServidor()) {
+        printf("Error: el servidor no esta corriendo.\n");
+        exit(1);
     }
-    crearlistaarticulo(&carritoGlobal);
     menu();
-    liberarlistaarticulo(&carritoGlobal);
     desconectarServidor();
     return 0;
 }
