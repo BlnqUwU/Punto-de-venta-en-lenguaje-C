@@ -1,6 +1,9 @@
 #include "cliente.h"
 #include "conexionipc.h"
 #include "listas.h"
+#include "utilidades.h"
+#include <ncurses.h>
+#include <string.h>
 
 void Carrito(usuario u){
     int opcion = 0;
@@ -32,6 +35,14 @@ void Carrito(usuario u){
 
 
     while(1) {
+        if (!conectarServidor()) {
+            ServidorSinConexion();
+        }
+        if (has_colors()) {
+            start_color();
+            init_pair(1, COLOR_BLACK, COLOR_CYAN);
+        }
+        bkgd(COLOR_PAIR(1));
         curs_set(0);
         clear();
         carrito=ObtenerCarrito();
@@ -42,9 +53,9 @@ void Carrito(usuario u){
         ImprimirCentrado(5, "Punto de venta");
         ImprimirCentrado(6, "Selecciona una opcion");
 
-        mvprintw(8, 25-strlen("producto")/2, "PRODUCTO");
-        mvprintw(8, 100-strlen("cantidad en carrito")/2, "CANTIDAD EN CARRITO");
-        mvprintw(8, 175-strlen("precio")/2, "PRECIO");
+        mvprintw(8, (COLS/8)-strlen("producto")/2, "PRODUCTO");
+        mvprintw(8, (COLS/2)-strlen("cantidad en carrito")/2, "CANTIDAD EN CARRITO");
+        mvprintw(8, (int)(COLS/1.2)-strlen("precio")/2, "PRECIO");
         
         refresh();
 
@@ -52,17 +63,18 @@ void Carrito(usuario u){
         char cant[50];
         char total[50];
         int pos = 0;
-        if (opcion < n && opcion >= 30) {
-            pos = opcion - 30 + 1;
+        int totalamostrar=(LINES-11)-(LINES/4);
+        if (opcion < n && opcion >= totalamostrar) {
+            pos = opcion - totalamostrar + 1;
         } else if (opcion < n) {
             pos = 0;
         }
 
         if(!emptyarticulo(carrito)){ //verifica si el carrito esta vacio
             //imprime el carrito
-        for (int i = pos; i < n && (i - pos) < 30; i++) {
+        for (int i = pos; i < n && (i - pos) < totalamostrar; i++) {
             articulo ac = getarticulo(i, carrito);
-            int fila = (LINES / 2) - (30 / 2) + (i - pos);
+            int fila = (LINES / 2) - (totalamostrar / 2) + (i - pos);
 
             move(fila, 0);
             clrtoeol();
@@ -72,9 +84,10 @@ void Carrito(usuario u){
             
             sprintf(pre, "%.2f", ac.precio);
             sprintf(cant, "%d", ac.cantidad);
-            mvprintw(fila, 25 - strlen(ac.producto) / 2, "%s", ac.producto);
-            mvprintw(fila, 100 - strlen(cant) / 2, "%d", ac.cantidad);
-            mvprintw(fila, 174 - strlen(pre) / 2, "$%.2f", ac.precio);
+            mvprintw(fila, (COLS/8) - strlen(ac.producto) / 2, "%s", ac.producto);
+            mvprintw(fila, (COLS/2) - strlen(cant) / 2, "%d", ac.cantidad);
+            mvprintw(fila, (int)(COLS/1.2) - strlen(pre) / 2, "$%.2f", ac.precio);
+            
             
             attroff(A_REVERSE);
         }
@@ -94,7 +107,7 @@ void Carrito(usuario u){
             if(i+n==opcion)
                 attron(A_REVERSE); 
             
-            ImprimirCentrado(42+i, menu[i]);
+            ImprimirCentrado((LINES/2)+(totalamostrar/2)+4+i, menu[i]);
             
             attroff(A_REVERSE);
         
@@ -147,26 +160,30 @@ void Carrito(usuario u){
                     elegido= getarticulo(opcion,carrito);
                     curs_set(0);
                     clear();
-                    mvprintw(LINES/2, (COLS/2)-strlen("Cuantas unidades de  desea quitar del carrito?: "), 
+                    int col=(COLS/2)-strlen("Cuantas unidades de  desea agregar al carrito?: ")-strlen(elegido.producto);
+                    if(col<0)
+                        col=0;
+                    mvprintw(LINES/2, col, 
                             "Cuantas unidades de %s desea quitar del carrito?: ", elegido.producto);
                     mvprintw((LINES/2)+2, (COLS/2)-10, "%c: Agregar",24);
                     mvprintw((LINES/2)+2, (COLS/2)+10, "%c: Quitar",25);
+                    mvprintw((LINES/2)+3, (COLS/2), "Salir: esc");
                     int cantidad=0;
                     //elegir cantidad a quitar del carrito
                     while(!salir){
-                        move((LINES/2),(COLS/2)+strlen("Cuantas unidades de  desea quitar del carrito?: "));
+                        move((LINES/2),col+strlen("Cuantas unidades de  desea quitar del carrito?: ")+strlen(elegido.producto));
                         clrtoeol();
-                        mvprintw((LINES/2), ((COLS/2)+strlen("Cuantas unidades de  desea quitar del carrito?: ")) -25, "%d", cantidad);
+                        mvprintw((LINES/2), (col+strlen("Cuantas unidades de  desea quitar del carrito?: ")+strlen(elegido.producto)) , "%d", cantidad);
                         tecla2=getch();
                         switch(tecla2) {
                             case KEY_UP:
-                                cantidad--;
-                                if(cantidad < 0) cantidad = elegido.cantidad;
+                                cantidad++;
+                                if(cantidad > elegido.cantidad) cantidad = 1;
                             break;
 
                             case KEY_DOWN:
-                                cantidad++;
-                                if(cantidad > elegido.cantidad) cantidad = 0;
+                                cantidad--;
+                                if(cantidad == 0) cantidad = elegido.cantidad;
                             break;
                             
                             case 10:
@@ -191,7 +208,7 @@ void Carrito(usuario u){
                                 salir=1;
                             break;
                             case 27:// se preciono la tecla esc
-                                liberarlistaarticulo(&carrito);
+                                //liberarlistaarticulo(&carrito);
                                 endwin();
                             return;
                         }
@@ -233,33 +250,43 @@ void Catalogo(usuario u){
 
 
     while(1) {
+        if (!conectarServidor()) {
+            ServidorSinConexion();
+        }
+        if (has_colors()) {
+            start_color();
+            init_pair(1, COLOR_BLACK, COLOR_CYAN);
+        }
+        bkgd(COLOR_PAIR(1));
         curs_set(0);
         clear();
         cat=ObtenerCatalogo();
         int n=cat->NE;
         int salir=0;
+        int col=0;
         
         ImprimirCentrado(5, "Punto de venta");
         ImprimirCentrado(6, "Selecciona una opcion");
 
-        mvprintw(8, 25-strlen("producto")/2, "PRODUCTO");
-        mvprintw(8, 100-strlen("cantidad disponible")/2, "CANTIDAD DISPONIBLE");
-        mvprintw(8, 175-strlen("precio")/2, "PRECIO");
+        mvprintw(8, (COLS/8)-strlen("producto")/2, "PRODUCTO");
+        mvprintw(8, (COLS/2)-strlen("cantidad disponible")/2, "CANTIDAD DISPONIBLE");
+        mvprintw(8, (int)(COLS/1.2)-strlen("precio")/2, "PRECIO");
         refresh();
 
         char pre[50];
         char cant[50];
         int pos = 0;
-        if (opcion < n && opcion >= 30) {
-            pos = opcion - 30 + 1;
+        int totalamostrar=(LINES-11)-(LINES/4);
+        if (opcion < n && opcion >= totalamostrar) {
+            pos = opcion - totalamostrar + 1;
         } else if (opcion < n) {
             pos = 0;
         }
         if(!emptyarticulo(cat))//verifica si el catalogo esta vacio
         //imprime el catalogo
-        for (int i = pos; i < n && (i - pos) < 30; i++) {
+        for (int i = pos; i < n && (i - pos) < totalamostrar; i++) {
             articulo ac = getarticulo(i, cat);
-            int fila = (LINES / 2) - (30 / 2) + (i - pos);
+            int fila = (LINES / 2) - (totalamostrar / 2) + (i - pos);
 
             move(fila, 0);
             clrtoeol();
@@ -269,9 +296,9 @@ void Catalogo(usuario u){
             
             sprintf(pre, "%.2f", ac.precio);
             sprintf(cant, "%d", ac.cantidad);
-            mvprintw(fila, 25 - strlen(ac.producto) / 2, "%s", ac.producto);
-            mvprintw(fila, 100 - strlen(cant) / 2, "%d", ac.cantidad);
-            mvprintw(fila, 174 - strlen(pre) / 2, "$%.2f", ac.precio);
+            mvprintw(fila, (COLS/8) - strlen(ac.producto) / 2, "%s", ac.producto);
+            mvprintw(fila, (COLS/2) - strlen(cant) / 2, "%d", ac.cantidad);
+            mvprintw(fila, (int)(COLS/1.2) - strlen(pre) / 2, "$%.2f", ac.precio);
             
             attroff(A_REVERSE);
         }
@@ -281,7 +308,7 @@ void Catalogo(usuario u){
             if(opcion ==n)
                 attron(A_REVERSE); 
             
-            ImprimirCentrado(41, menu[0]);
+            ImprimirCentrado((LINES/2)+(totalamostrar/2)+3, menu[0]);
             
             attroff(A_REVERSE);
         
@@ -310,26 +337,30 @@ void Catalogo(usuario u){
                     elegido= getarticulo(opcion,cat);
                     curs_set(0);
                     clear();
-                    mvprintw(LINES/2, (COLS/2)-strlen("Cuantas unidades de  desea agregar al carrito?: "), 
+                    col=(COLS/2)-strlen("Cuantas unidades de  desea agregar al carrito?: ")-strlen(elegido.producto);
+                    if(col<0)
+                        col=0;
+                    mvprintw(LINES/2, col, 
                             "Cuantas unidades de %s desea agregar al carrito?: ", elegido.producto);
                     mvprintw((LINES/2)+2, (COLS/2)-10, "%c: Agregar",24);
                     mvprintw((LINES/2)+2, (COLS/2)+10, "%c: Quitar",25);
+                    mvprintw((LINES/2)+3, (COLS/2), "Salir: esc");
                     int cantidad=0;
                     //seleccionar cuantos elementos agregar al carrito de compra desde el catalogo
                     while(!salir){
-                        move((LINES/2),(COLS/2)+strlen("Cuantas unidades de  desea agregar al carrito?: "));
+                        move((LINES/2),col+strlen("Cuantas unidades de  desea agregar al carrito?: ")+strlen(elegido.producto));
                         clrtoeol();
-                        mvprintw((LINES/2), ((COLS/2)+strlen("Cuantas unidades de  desea agregar al carrito?: ")) -25, "%d", cantidad);
+                        mvprintw((LINES/2), (col+strlen("Cuantas unidades de  desea agregar al carrito?: "))+strlen(elegido.producto), "%d", cantidad);
                         tecla2=getch();
                         switch(tecla2) {
                             case KEY_UP:
-                                cantidad--;
-                                if(cantidad < 0) cantidad = elegido.cantidad;
+                                cantidad++;
+                                if(cantidad > elegido.cantidad) cantidad = 1;
                             break;
 
                             case KEY_DOWN:
-                                cantidad++;
-                                if(cantidad > elegido.cantidad) cantidad = 0;
+                                cantidad--;
+                                if(cantidad == 0) cantidad = elegido.cantidad;
                             break;
                             
                             case 10:
@@ -342,7 +373,7 @@ void Catalogo(usuario u){
 
                             break;
                             case 27:
-                            liberarlistaarticulo(&cat);
+                                salir=1;
                                 endwin();
                             break;
                         }
@@ -400,6 +431,14 @@ int Perfil(usuario u){
     keypad(stdscr, TRUE); 
 
     while(1) {
+        if (!conectarServidor()) {
+            ServidorSinConexion();
+        }
+        if (has_colors()) {
+            start_color();
+            init_pair(1, COLOR_BLACK, COLOR_CYAN);
+        }
+        bkgd(COLOR_PAIR(1));
         curs_set(0);
         clear();
         
@@ -579,6 +618,14 @@ void MenuPrincipal(usuario u){
     keypad(stdscr, TRUE); 
 
     while(1) {
+        if (!conectarServidor()) {
+            ServidorSinConexion();
+        }
+        if (has_colors()) {
+            start_color();
+            init_pair(1, COLOR_BLACK, COLOR_CYAN);
+        }
+        bkgd(COLOR_PAIR(1));
         curs_set(0);
         clear();
         
@@ -648,6 +695,7 @@ void registrar() {
     int col= 0;
     int cor=0;
     int us=0;
+    int pas=0;
     char aux0[50],aux1[50];
     char *menu[] = {
         "Nombre:",
@@ -672,6 +720,14 @@ void registrar() {
     int l = sizeof(DatosUsuario)/sizeof(DatosUsuario[0]);
     
     while(1) {
+        if (!conectarServidor()) {
+            ServidorSinConexion();
+        }
+        if (has_colors()) {
+            start_color();
+            init_pair(1, COLOR_BLACK, COLOR_CYAN);
+        }
+        bkgd(COLOR_PAIR(1));
         curs_set(0);
         clear();
 
@@ -699,10 +755,10 @@ void registrar() {
         //imprime mensajes de error si el usuario ingreso datos invalidos en la iteracion anterior
         if(cor==1){
             
-            ImprimirCentrado((LINES/2)+11, "Correo Invalido");
+            ImprimirCentrado((LINES/2)+(LINES/4)+3, "Correo Invalido");
         }
         else if (cor==2){
-            mvprintw((LINES/2)+11, (((COLS-strlen("El correo  ya esta en uso")-strlen(aux0))/2)), "El Correo %s ya esta en uso", aux0);
+            mvprintw((LINES/2)+(LINES/4)+3, (((COLS-strlen("El correo  ya esta en uso")-strlen(aux0))/2)), "El Correo %s ya esta en uso", aux0);
         }
             
         col= (COLS - strlen(aux1)-strlen("El usuario  ya existe")) / 2;
@@ -710,15 +766,34 @@ void registrar() {
             col=0;
         if(us==1){  
             if(cor!=0){
-                move((LINES/2)+12, 0);
+                move((LINES/2)+(LINES/4)+4, 0);
                 clrtoeol();
-                mvprintw((LINES/2)+12, col, "El usuario %s ya existe", aux1);  
+                mvprintw((LINES/2)+(LINES/4)+4, col, "El usuario %s ya existe", aux1);  
             } else{
-                move((LINES/2)+11,col);
+                move((LINES/2)+(LINES/4)+3,col);
                 clrtoeol(); 
-                mvprintw((LINES/2)+11, col, "El usuario %s ya existe", aux1);  
+                mvprintw((LINES/2)+(LINES/4)+3, col, "El usuario %s ya existe", aux1);  
             }
             
+        }
+
+        col= (COLS - strlen(aux1)-strlen("La password no cumple con los requerimientos")) / 2;
+        if(pas==1){
+        if(cor!=0||us==1){
+            if(cor&&us){
+                move((LINES/2)+(LINES/4)+5, 0);
+                clrtoeol();
+                mvprintw((LINES/2)+(LINES/4)+5, col, "La password no cumple con los requerimientos");  
+            }else if ((cor==1&&cor==2)!=us){
+                move((LINES/2)+(LINES/4)+4, 0);
+                clrtoeol();
+                mvprintw((LINES/2)+(LINES/4)+4, col, "La password no cumple con los requerimientos");  
+            }
+        }else{
+                move((LINES/2)+(LINES/4)+3, 0);
+                clrtoeol();
+                mvprintw((LINES/2)+(LINES/4)+3, col, "La password no cumple con los requerimientos");     
+            }
         }
             
 
@@ -762,26 +837,26 @@ void registrar() {
                     getstr (user.correo);
                     noecho();
                     if (VerificarCorreo(user.correo) == 0){
-                        move((LINES/2)+11, 0);
+                        move((LINES/2)+1+(LINES/4), 0);
                         clrtoeol();
-                        move((LINES/2)+12, 0);
+                        move((LINES/2)+2+(LINES/4), 0);
                         strcpy(user.correo, "");
                         clrtoeol();
                         cor=1;
-                    }else if (BuscarCorreo(user.correo) == 1) {
-                        move((LINES/2)+11, 0);
+                    }else if(BuscarCorreo(user.correo) == 1){
+                        move((LINES/2)+1+(LINES/4), 0);
                         clrtoeol();
-                        move((LINES/2)+12, 0);
+                        move((LINES/2)+2+(LINES/4), 0);
                         clrtoeol();
-                        move((LINES/2)+7,8+49);
+                        move((LINES/2)+7+(LINES/4),8+49);
                         clrtoeol();
                         cor=2;
                         strcpy(aux0, user.correo);
                         strcpy(user.correo, "");
                     }else {
-                        move((LINES/2)+11, 0);
+                        move((LINES/2)+1+(LINES/4), 0);
                         clrtoeol();
-                        move((LINES/2)+12, 0);
+                        move((LINES/2)+2+(LINES/4), 0);
                         clrtoeol();
                     }
                     break;
@@ -792,49 +867,57 @@ void registrar() {
                     clrtoeol(); 
                     getstr (user.usr);
                     noecho();
-                    if (BuscarUsuario(user.usr) == 1) {
-                        move((LINES/2)+11, 0);
+                    if (BuscarUsuario(user.usr) == 1){
+                        move((LINES/2)+1+(LINES/4), 0);
                         clrtoeol();
-                        move((LINES/2)+12, 0);
+                        move((LINES/2)+2+(LINES/4), 0);
                         clrtoeol();
-                        move((LINES/2)+8,9+49);
+                        move((LINES/2)+8+(LINES/4),9+49);
                         clrtoeol();
                         us=1;
                         strcpy(aux1, user.usr);
                         strcpy(user.usr, "");
                     }else {
-                        move((LINES/2)+11, 0);
+                        move((LINES/2)+1+(LINES/4), 0);
                         clrtoeol();
-                        move((LINES/2)+12, 0);
+                        move((LINES/2)+2+(LINES/4), 0);
                         clrtoeol();
                     }
                     break;
                     case 4: //contraseña elegida, las restricciones son impresas
+                    pas=0;
                     noecho();
-                    ImprimirCentrado((LINES/2)+11, "La password debe tener minimo 12 caracteres de largo." );
-                    ImprimirCentrado((LINES/2)+12, "La password debe ser una combinacion de mayusculas, minusculas, numeros y simbolos.");
-                    ImprimirCentrado((LINES/2)+13, "(por ejemplo: ! # $ & , - . )");
+                    move((LINES/2)+1+(LINES/4), 0);
+                        clrtoeol();
+                    move((LINES/2)+2+(LINES/4), 0);
+                        clrtoeol();
+                    move((LINES/2)+3+(LINES/4),0);
+                        clrtoeol();
+                    ImprimirCentrado((LINES/2)+1+(LINES/4), "La password debe tener minimo 12 caracteres de largo." );
+                    ImprimirCentrado((LINES/2)+2+(LINES/4), "La password debe ser una combinacion de mayusculas, minusculas, numeros y simbolos.");
+                    ImprimirCentrado((LINES/2)+3+(LINES/4), "(por ejemplo: ! # $ & , - . )");
                     move((LINES/2)+4,10+(COLS/2)-26);
                     clrtoeol(); 
                     getstr(pass);
                     noecho();
 
                     if (ComprobarPassword(pass) < 5) {
-                        move((LINES/2)+11, 0);
+                        move((LINES/2)+1+(LINES/4), 0);
                         clrtoeol();
-                        move((LINES/2)+12, 0);
+                        move((LINES/2)+2+(LINES/4), 0);
                         clrtoeol();
-                        move((LINES/2)+13, 0);
+                        move((LINES/2)+3+(LINES/4), 0);
                         clrtoeol();
                         noecho();
+                        pas=1;
                         ImprimirCentrado((LINES/2)+11, "La password no cumple con los requerimientos.");
                         noecho();
                     }else {
-                        move((LINES/2)+11, 0);
+                        move((LINES/2)+1+(LINES/4), 0);
                         clrtoeol();
-                        move((LINES/2)+12, 0);
+                        move((LINES/2)+2+(LINES/4), 0);
                         clrtoeol();
-                        move((LINES/2)+13, 0);
+                        move((LINES/2)+3+(LINES/4), 0);
                         clrtoeol();
                         echo();
                         hash(pass, hash_pass);
@@ -913,8 +996,17 @@ void iniciarSesion() {
     int l = sizeof(DatosUsuario)/sizeof(DatosUsuario[0]);
     
     while(errorCount != 3) {
+        if (!conectarServidor()) {
+            ServidorSinConexion();
+        }
+        if (has_colors()) {
+            start_color();
+            init_pair(1, COLOR_BLACK, COLOR_CYAN);
+        }
+        bkgd(COLOR_PAIR(1));
         curs_set(0);
         clear();
+        
         ImprimirCentrado((LINES/2) -3, "Iniciar Sesion");
 
         //imprime las opciones del menu
@@ -935,7 +1027,7 @@ void iniciarSesion() {
         }
 
         if(errorCount>0) //imprime error si es que los datos no son correctos
-            ImprimirCentrado((LINES/2) +11, "Usuario y/o password incorrectos.");
+            ImprimirCentrado((LINES/2)+(LINES/4), "Usuario y/o password incorrectos.");
         
         refresh();
 
@@ -1031,29 +1123,35 @@ void menu() {
     keypad(stdscr, TRUE); 
 
     //si la terminal admite color, inicia los colores negro y cyan para la interfaz
-    if (has_colors()) {
-        start_color();
-        init_pair(1, COLOR_BLACK, COLOR_CYAN);
-    }
+    
 
-    bkgd(COLOR_PAIR(1));
+    
 
     while(1) {
+        
         curs_set(0);
         clear();
-
+        if (!conectarServidor()) {
+            ServidorSinConexion();
+        }
+        if (has_colors()) {
+            start_color();
+            init_pair(1, COLOR_BLACK, COLOR_CYAN);
+        }
+        bkgd(COLOR_PAIR(1));
         ImprimirCentrado((LINES/2) -3, "Punto de venta");
         ImprimirCentrado((LINES/2) -2, "Selecciona una opcion");
 
         //imprime las opciones del menu
         for(int i = 0; i < n; i++) {
+            
             if(i == opcion)
                 attron(A_REVERSE);
             
             ImprimirCentrado((LINES/2)+i, menu[i]);
             attroff(A_REVERSE);
         }
-
+        
         refresh();
 
         tecla = getch();
@@ -1092,10 +1190,48 @@ void menu() {
     }
 }
 
+void ServidorSinConexion(){
+    initscr();
+    set_escdelay(0);
+    noecho();
+    curs_set(0);
+        clear();
+    int tecla;
+    keypad(stdscr, TRUE); 
+    if (has_colors()) {
+        start_color();
+        init_pair(1, COLOR_BLACK, COLOR_MAGENTA);
+    }
+    
+    while (1) {
+        bkgd(COLOR_PAIR(1));
+        if(conectarServidor()){
+            curs_set(0);
+            clear();
+            endwin();
+            return;
+        }
+            curs_set(0);
+        clear();
+            ImprimirCentrado((LINES/2), "Sin conexion al servidor.");
+            tecla=getch();
+            switch (tecla) {
+                case 27:
+                    endwin();
+                    exit(1);
+                default:
+                    break;                
+            
+        }
+        
+    }
+
+
+}
+
 int main() {
     if (!conectarServidor()) {
-        printf("Error: el servidor no esta corriendo.\n");
-        exit(1);
+        ServidorSinConexion();
     }
     menu();
     desconectarServidor();

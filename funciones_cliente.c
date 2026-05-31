@@ -51,4 +51,10 @@ int ComprobarPassword(char *pass){
 
     return Verificaciones;
 }
+int BuscarCorreo(char *correo){
+    return 0;
+}
+int BuscarUsuario(char *usr){
+    return 0;
+}
 

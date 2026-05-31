@@ -14,9 +14,9 @@
 // ──────────────────────────────────────────
 
 int VerificarCorreo(char *correo);
+int ComprobarPassword(char *pass);
 int BuscarCorreo(char *correo);
 int BuscarUsuario(char *usr);
-int ComprobarPassword(char *pass);
 
 //_____________________________________________________________________________________________
 
@@ -26,6 +26,7 @@ int ComprobarPassword(char *pass);
 
 void registrar();
 void iniciarSesion();
+void ServidorSinConexion();
 void menu();
 void MenuPrincipal(usuario u);
 void Catalogo(usuario u);
