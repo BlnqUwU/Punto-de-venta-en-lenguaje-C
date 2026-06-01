@@ -2,7 +2,7 @@
 
 #include "listas.h"
 #include "memoria_compartida.h"
-#include "utilidades_back.h"
+#include "utilidades.h"
 
 int BuscarAtributo(char *atributo, char *BD){
     return 0;
@@ -262,6 +262,52 @@ void CRUDcatalogo(InventarioShm *Ishm, int CRUD, int BD){
     }
 }
 
+void CRUDcarrito(carritoShm *Kshm, int CRUD) {
+
+    // CRUD: 0=guardar 1=cargar 3=limpiar
+    char archivo[150];
+    snprintf(archivo, sizeof(archivo), "carrito_%s.dat", Kshm->usr);
+
+    if (CRUD == 0) {
+        // GUARDAR carrito en archivo
+        FILE *f = fopen(archivo, "w");
+        if (!f) { Kshm->realizado = -1; return; }
+        for (int i = 0; i < Kshm->totalItems; i++) {
+            fprintf(f, "%s,%d,%.2f,\n",
+                Kshm->items[i].producto,
+                Kshm->items[i].cantidad,
+                Kshm->items[i].precio);
+        }
+        fclose(f);
+        Kshm->realizado = 1;
+
+    } else if (CRUD == 1) {
+        // CARGAR carrito desde archivo
+        FILE *f = fopen(archivo, "r");
+        if (!f) { Kshm->totalItems = 0; Kshm->realizado = 1; return; }
+        Kshm->totalItems = 0;
+        char linea[300];
+        while (fgets(linea, sizeof(linea), f) && Kshm->totalItems < MAX_CARRITO) {
+            articulo a;
+            char cantidad[20], precio[20];
+            sscanf(linea, "%[^,],%[^,],%[^,\n]", a.producto, cantidad, precio);
+            a.cantidad = atoi(cantidad);
+            a.precio   = atof(precio);
+            Kshm->items[Kshm->totalItems] = a;
+            Kshm->totalItems++;
+        }
+        fclose(f);
+        Kshm->realizado = 1;
+
+    } else if (CRUD == 3) {
+        // LIMPIAR — borrar archivo
+        remove(archivo);
+        Kshm->totalItems = 0;
+        Kshm->realizado = 1;
+    }
+}
+
+
 void CRUDventas(ventaShm *Vshm, int CRUD){
 
     // 0=crear, 1=leer
@@ -362,179 +408,3 @@ void desencriptar(const char *entrada, const char *salida) {
     // XOR es simetrico, misma operacion
     encriptar(entrada, salida);
 }*/
-
-// ──────────────────────────────────────────
-// ARCHIVO DE INVENTARIO
-// ──────────────────────────────────────────
-
-int guardarInventario(InventarioShm *shm) {
-    // GUARDAR EN ARCHIVO TEMPORAL SIN ENCRIPTAR
-    /*FILE *f = fopen("inventario.tmp", "wb");
-    if (!f) {
-        perror("guardarInventario: fopen");
-        return 0;
-    }
-
-    fwrite(shm, sizeof(InventarioShm), 1, f);
-    fclose(f);
-
-    // ENCRIPTAR Y GUARDAR COMO ARCHIVO FINAL
-    encriptar("inventario.tmp", ARCHIVO_INV);
-    remove("inventario.tmp");
-*/
-    return 1;
-}
-
-int cargarInventario(InventarioShm *shm) {
-    /*FILE *f = fopen(ARCHIVO_INV, "rb");
-    if (!f) {
-        // NO EXISTE EL ARCHIVO, INVENTARIO VACIO
-        shm->totalProductos = 0;
-        shm->totalVentas    = 0;
-        return 0;
-    }
-    fclose(f);
-
-    // DESENCRIPTAR A ARCHIVO TEMPORAL
-    desencriptar(ARCHIVO_INV, "inventario.tmp");
-
-    f = fopen("inventario.tmp", "rb");
-    if (!f) {
-        perror("cargarInventario: fopen tmp");
-        return 0;
-    }
-
-    fread(shm, sizeof(InventarioShm), 1, f);
-    fclose(f);
-    remove("inventario.tmp");
-*/
-    return 1;
-}
-
-// ──────────────────────────────────────────
-// CRUD INVENTARIO
-// ──────────────────────────────────────────
-
-int agregarProducto(InventarioShm *shm, articulo p) {
-   /* if (shm->totalProductos >= MAX_PRODUCTOS)
-        return 0;   // inventario lleno
-
-    // GENERAR ID UNICO (el mayor id existente + 1)
-    int maxId = 0;
-    for (int i = 0; i < shm->totalProductos; i++) {
-        if (shm->productos[i].activo && shm->productos[i].id > maxId)
-            maxId = shm->productos[i].id;
-    }
-
-    p.id     = maxId + 1;
-    p.activo = 1;
-
-    shm->productos[shm->totalProductos] = p;
-    shm->totalProductos++;
-*/
-    return 1;
-}
-
-int buscarProducto(InventarioShm *shm, int id) {
-    /*for (int i = 0; i < shm->totalProductos; i++) {
-        if (shm->productos[i].activo && shm->productos[i].id == id)
-            return i;   // retorna el indice en el arreglo
-    }*/
-    return -1;  // no encontrado
-}
-
-int eliminarProducto(InventarioShm *shm, int id) {
-    /*int idx = buscarProducto(shm, id);
-    if (idx == -1)
-        return 0;   // no existe
-
-    shm->productos[idx].activo = 0;*/
-    return 1;
-}
-
-int modificarProducto(InventarioShm *shm, int id, articulo nuevo) {
-    /*int idx = buscarProducto(shm, id);
-    if (idx == -1)
-        return 0;
-
-    // CONSERVAR ID Y ESTADO ACTIVO
-    nuevo.id     = id;
-    nuevo.activo = 1;
-
-    shm->productos[idx] = nuevo;*/
-    return 1;
-}
-
-int venderProducto(InventarioShm *shm, int id, int cantidad, const char *usr) {
-    /*int idx = buscarProducto(shm, id);
-    if (idx == -1)
-        return 0;   // producto no existe
-
-    if (shm->productos[idx].existencias < cantidad)
-        return -1;  // sin suficientes existencias
-
-    // DESCONTAR EXISTENCIAS
-    shm->productos[idx].existencias -= cantidad;
-
-    // REGISTRAR VENTA
-    if (shm->totalVentas < MAX_VENTAS) {
-        Venta v;
-        v.total = shm->productos[idx].precio * cantidad;
-        strncpy(v.usr, usr, sizeof(v.usr) - 1);
-        v.usr[sizeof(v.usr) - 1] = '\0';
-
-        shm->ventas[shm->totalVentas] = v;
-        shm->totalVentas++;
-    }*/
-
-    return 1;
-}
-
-
-// ──────────────────────────────────────────
-// ARCHIVO DE USUARIOS
-// ──────────────────────────────────────────
-
-int guardarUsuarios(usuarioShm *shm) {
-    // GUARDAR EN ARCHIVO TEMPORAL SIN ENCRIPTAR
-    /*FILE *f = fopen("usuarios.tmp", "wb");
-    if (!f) {
-        perror("guardarUsuarios: fopen");
-        return 0;
-    }
-
-    fwrite(shm, sizeof(usuarioShm), 1, f);
-    fclose(f);
-
-    // ENCRIPTAR Y GUARDAR COMO ARCHIVO FINAL
-    encriptar("usuarios.tmp", ARCHIVO_INV);
-    remove("usuarios.tmp");
-*/
-    return 1;
-}
-
-int cargarUsuarios(InventarioShm *shm) {
-    /*FILE *f = fopen(ARCHIVO_INV, "rb");
-    if (!f) {
-        // NO EXISTE EL ARCHIVO, INVENTARIO VACIO
-        shm->totalProductos = 0;
-        shm->totalVentas    = 0;
-        return 0;
-    }
-    fclose(f);
-
-    // DESENCRIPTAR A ARCHIVO TEMPORAL
-    desencriptar(ARCHIVO_INV, "usuarios.tmp");
-
-    f = fopen("usuarios.tmp", "rb");
-    if (!f) {
-        perror("cargarUsuarios: fopen tmp");
-        return 0;
-    }
-
-    fread(shm, sizeof(usuarioShm), 1, f);
-    fclose(f);
-    remove("usuarios.tmp");*/
-
-    return 1;
-}

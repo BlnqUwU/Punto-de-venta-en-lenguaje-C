@@ -14,11 +14,13 @@ static listaarticulo carritoLocal = NULL;
 static usuarioShm *Ushm   = NULL;
 static ventaShm *Vshm   = NULL;
 static ControlShm *Cshm   = NULL;
+static carritoShm *Kshm   = NULL;
 static int            semID = -1;
 static int            shmID = -1;
 static int            shmID2 = -1;
 static int            shmID3 = -1;
 static int            shmID4 = -1;
+static int            shmID5 = -1;
 
 
 int conectarServidor() {
@@ -86,6 +88,14 @@ int conectarServidor() {
         return 0;
     }
 
+    // CARRITO
+    key_t keyShm_carrito = ftok(ARCHIVO_IPC, 'K');
+    shmID5 = shmget(keyShm_carrito, sizeof(carritoShm), PERMISOS);
+    if (shmID5 == -1) { perror("shmget carrito"); return 0; }
+    Kshm = (carritoShm *) shmat(shmID5, NULL, 0);
+    if (Kshm == (void *) -1) { perror("shmat carrito"); return 0; }
+
+
     // SEMAFOROS
 
     semID = semget(keySem, 5, PERMISOS);
@@ -102,6 +112,7 @@ void desconectarServidor() {
     if (Ushm) shmdt(Ushm);
     if (Vshm) shmdt(Vshm);
     if (Cshm) shmdt(Cshm);
+    if (Kshm) shmdt(Kshm);
 }
 
 // ──────────────────────────────────────────
@@ -216,6 +227,50 @@ listaarticulo ObtenerCarrito(){
 
     if (carritoLocal == NULL) crearlistaarticulo(&carritoLocal);
     return carritoLocal;
+}
+
+void guardarCarrito(char *usr) {
+    if (!Kshm || carritoLocal == NULL) return;
+
+    downSem(semID, SEM_INV);
+    strncpy(Kshm->usr, usr, sizeof(Kshm->usr) - 1);
+    Kshm->totalItems = 0;
+    for (int i = 0; i < carritoLocal->NE && i < MAX_CARRITO; i++) {
+        Kshm->items[i] = getarticulo(i, carritoLocal);
+        Kshm->totalItems++;
+    }
+    Kshm->CRUD = 0; // guardar
+    Kshm->realizado = 0;
+    upSem(semID, SEM_INV);
+
+    Cshm->tipo = 3;
+    upSem(semID, SEM_REQ);
+    downSem(semID, SEM_ACK);
+}
+
+void cargarCarrito(char *usr) {
+
+    if (!Kshm) return;
+
+    downSem(semID, SEM_INV);
+    strncpy(Kshm->usr, usr, sizeof(Kshm->usr) - 1);
+    Kshm->CRUD = 1; // cargar
+    Kshm->realizado = 0;
+    upSem(semID, SEM_INV);
+
+    Cshm->tipo = 3;
+    upSem(semID, SEM_REQ);
+    downSem(semID, SEM_ACK);
+
+    // llenar carritoLocal con lo que respondio el servidor
+    if (carritoLocal == NULL) crearlistaarticulo(&carritoLocal);
+    else Vaciarlistaarticulo(carritoLocal);
+
+    downSem(semID, SEM_INV);
+    for (int i = 0; i < Kshm->totalItems; i++) {
+        addarticulo(carritoLocal->NE, Kshm->items[i], carritoLocal);
+    }
+    upSem(semID, SEM_INV);
 }
 
 int enviarusuario(usuario u, int CRUD, char *nombreUsuario){

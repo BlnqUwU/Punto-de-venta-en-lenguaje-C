@@ -8,6 +8,7 @@ int shmID;
 int shmID2;
 int shmID3;
 int shmID4;
+int shmID5;
 int semID;
 
 // ──────────────────────────────────────────
@@ -20,6 +21,7 @@ typedef struct {
     usuarioShm *Ushm;
     ventaShm *Vshm;
     ControlShm *Cshm;
+    carritoShm *Kshm;
 } ArgsHilo;
 
 // ──────────────────────────────────────────
@@ -41,11 +43,18 @@ void *atenderPeticion(void *arg) {
     } else if (tipo == 2) {
         // VENTAS
         CRUDventas(args -> Vshm, args->Vshm->CRUD);
+    } else if (tipo == 3) {
+        CRUDcarrito(args->Kshm, args->Kshm->CRUD);
     }
 
     upSem(args->semID, SEM_ACK);
     return NULL;
 
+
+    // LEER PETICION DESDE MEMORIA COMPARTIDA
+
+    // POR AHORA SOLO CONFIRMA RECEPCION
+    // AQUI SE EXPANDIRA CON LOGICA DE VENTA
 }
 
 void limpiar(int sig) {
@@ -53,6 +62,7 @@ void limpiar(int sig) {
     shmctl(shmID2, IPC_RMID, 0);
     shmctl(shmID3, IPC_RMID, 0);
     shmctl(shmID4, IPC_RMID, 0);
+    shmctl(shmID5, IPC_RMID, 0);
     semctl(semID, 0, IPC_RMID);
     exit(0);
 }
@@ -72,7 +82,7 @@ int main() {
     key_t keyShm_usr = ftok(ARCHIVO_IPC, 'U');
     key_t keyShm_venta = ftok(ARCHIVO_IPC, 'V');
     key_t keyShm_ctrl = ftok(ARCHIVO_IPC, 'C');
-
+    key_t keyShm_carrito = ftok(ARCHIVO_IPC, 'K');
     key_t keySem = ftok(ARCHIVO_IPC, 'S');
     if (keyShm == -1 || keySem == -1) {
         perror("ftok");
@@ -133,6 +143,20 @@ int main() {
         exit(1);
     }
 
+    //CARRITO
+    shmID5 = shmget(keyShm_carrito, sizeof(carritoShm), IPC_CREAT | PERMISOS);
+    if (shmID5 == -1) {
+        perror("shmget carrito");
+        exit(1);
+    }
+
+    carritoShm *Kshm = (carritoShm *) shmat(shmID5, NULL, 0);
+    if (Kshm == (void *) -1) {
+        perror("shmat carrito");
+        exit(1);
+    }
+
+
     // CARGAR INVENTARIO DESDE ARCHIVO (si existe)
 
     CRUDcatalogo(Ishm, 1, 0);
@@ -172,8 +196,8 @@ int main() {
     // SEM_INV  = 1 -> inventario libre
     // SEM_USR  = 1 -> usuarios libre
     // SEM_VTA  = 1 -> ventas libre
-    // SEM_REQ  = 0 -> sin peticiones //peticiones de usuarios
-    // SEM_ACK  = 0 -> sin respuestas   //avisa si servidor esta libre
+    // SEM_REQ  = 0 -> sin peticiones
+    // SEM_ACK  = 0 -> sin respuestas
 
     union semun arg;
     arg.val = 1; semctl(semID, SEM_INV, SETVAL, arg);
@@ -196,7 +220,7 @@ int main() {
 
         // CREAR HILO PARA ATENDER
         pthread_t hilo;
-        ArgsHilo args = {semID, Ishm, Ushm, Vshm, Cshm};
+        ArgsHilo args = {semID, Ishm, Ushm, Vshm, Cshm, Kshm};
 
         if (pthread_create(&hilo, NULL, atenderPeticion, &args) != 0) {
             perror("pthread_create");
@@ -216,9 +240,12 @@ int main() {
     shmdt(Ushm);
     shmdt(Vshm);
     shmdt(Cshm);
+    shmdt(Kshm);
     shmctl(shmID, IPC_RMID, 0);
     shmctl(shmID2, IPC_RMID, 0);
+    shmctl(shmID5, IPC_RMID, 0);
     semctl(semID, 0, IPC_RMID);
+
 
     return 0;
 }
