@@ -24,6 +24,7 @@ void Carrito(usuario u){
     char fecha[20];
     strftime(fecha, sizeof(fecha), "%d/%m/%Y %H:%M", tm_info);
 
+    cargarCarrito(u.usr);
     carrito=ObtenerCarrito();
 
     articulo elegido;
@@ -131,6 +132,7 @@ void Carrito(usuario u){
 
             case 10: // ENTER
                 if(opcion==n+1){ //salir seleccionado
+                    guardarCarrito(u.usr);
                     liberarlistaarticulo(&carrito);
                     return;
                 }else if(opcion==n){ //pagar carrito seleccionado
@@ -145,6 +147,7 @@ void Carrito(usuario u){
                     enviarVenta(v);
 
                     if(!emptyarticulo(carrito)){ //verifica si el carrito esta vacio
+                        guardarCarrito(u.usr);
                         limpiarCarrito(); //elimina los elementos del carrito
                         ImprimirCentrado(LINES/2, "Carrito pagado con exito.");
                         getch();
@@ -238,6 +241,7 @@ void Catalogo(usuario u){
     };
     int m= sizeof(menu)/sizeof(menu[0]);
 
+    cargarCarrito(u.usr);
      //insertar catalogo de memoria compartida a lista
     //cargarCatalogo(cat);
     cat=ObtenerCatalogo();
@@ -332,6 +336,7 @@ void Catalogo(usuario u){
 
             case 10: // ENTER
                 if(opcion==n){//salir seleccionado
+                    guardarCarrito(u.usr);
                     liberarlistaarticulo(&cat);
                     return;
                 }else{//cualquier elemento del catalogo seleccionado
@@ -386,10 +391,10 @@ void Catalogo(usuario u){
             break;
             
             case 27:
-            liberarlistaarticulo(&cat);
-            endwin();
-            
-            return;
+                guardarCarrito(u.usr);
+                liberarlistaarticulo(&cat);
+                endwin();
+                return;
         }
     }
     liberarlistaarticulo(&cat);

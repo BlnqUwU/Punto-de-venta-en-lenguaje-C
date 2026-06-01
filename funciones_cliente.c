@@ -1,5 +1,6 @@
 #include "cliente.h"
 #include "listas.h"
+#include "conexionipc.h"
 
 int VerificarCorreo(char *correo){
     for(int i=0; correo[i] != '\0'; i++){ //explora toda la cadena de correo

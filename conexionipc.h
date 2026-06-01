@@ -16,6 +16,8 @@ int enviararticulo(articulo p, int CRUD, int BD); // 0 catalogo, 1 carrito
 int obtenerCantidadCatalogo(char *producto);
 listaarticulo ObtenerCatalogo();
 listaarticulo ObtenerCarrito();
+void guardarCarrito(char *usr);
+void cargarCarrito(char *usr);
 void limpiarCarrito();
 
 

@@ -2,7 +2,7 @@
 #define SERVIDOR_H
 #include "listas.h"
 #include "memoria_compartida.h"
-#include "utilidades_back.h"
+#include "utilidades.h"
 
 // ──────────────────────────────────────────
 // INDICES DE SEMAFOROS
@@ -39,6 +39,6 @@ lista EnviarUsuarios();
 void CRUDusuario(usuarioShm *Ushm, int CRUD);
 void CRUDcatalogo(InventarioShm *Ishm, int CRUD, int BD);
 void CRUDventas(ventaShm *Vshm, int CRUD);
-
+void CRUDcarrito(carritoShm *Kshm, int CRUD);
 
 #endif

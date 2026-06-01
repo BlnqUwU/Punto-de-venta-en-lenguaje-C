@@ -1,7 +1,7 @@
 #ifndef MEMORIA_COMPARTIDA_H
 #define MEMORIA_COMPARTIDA_H
 
-#include "utilidades_back.h"
+#include "utilidades.h"
 #include "listas.h"
 
 // ──────────────────────────────────────────
@@ -12,6 +12,7 @@
 #define MAX_PRODUCTOS  50
 #define MAX_USUARIOS   100
 #define MAX_VENTAS     500
+#define MAX_CARRITO    50
 #define ARCHIVO_CAT    "catalogo.dat"
 #define ARCHIVO_USR    "usuarios.dat"
 #define ARCHIVO_VD     "ventas_diarias.txt"
@@ -62,6 +63,16 @@ typedef struct {
     int   realizado;
 } ventaShm;
 
+
+//CARRITO
+
+typedef struct {
+    articulo items[MAX_CARRITO];
+    int      totalItems;
+    char     usr[100];   // usuario del carrito
+    int      CRUD;       // 0=guardar 1=cargar 3=limpiar
+    int      realizado;
+} carritoShm;
 
 
 // ──────────────────────────────────────────

@@ -262,6 +262,52 @@ void CRUDcatalogo(InventarioShm *Ishm, int CRUD, int BD){
     }
 }
 
+void CRUDcarrito(carritoShm *Kshm, int CRUD) {
+
+    // CRUD: 0=guardar 1=cargar 3=limpiar
+    char archivo[150];
+    snprintf(archivo, sizeof(archivo), "carrito_%s.dat", Kshm->usr);
+
+    if (CRUD == 0) {
+        // GUARDAR carrito en archivo
+        FILE *f = fopen(archivo, "w");
+        if (!f) { Kshm->realizado = -1; return; }
+        for (int i = 0; i < Kshm->totalItems; i++) {
+            fprintf(f, "%s,%d,%.2f,\n",
+                Kshm->items[i].producto,
+                Kshm->items[i].cantidad,
+                Kshm->items[i].precio);
+        }
+        fclose(f);
+        Kshm->realizado = 1;
+
+    } else if (CRUD == 1) {
+        // CARGAR carrito desde archivo
+        FILE *f = fopen(archivo, "r");
+        if (!f) { Kshm->totalItems = 0; Kshm->realizado = 1; return; }
+        Kshm->totalItems = 0;
+        char linea[300];
+        while (fgets(linea, sizeof(linea), f) && Kshm->totalItems < MAX_CARRITO) {
+            articulo a;
+            char cantidad[20], precio[20];
+            sscanf(linea, "%[^,],%[^,],%[^,\n]", a.producto, cantidad, precio);
+            a.cantidad = atoi(cantidad);
+            a.precio   = atof(precio);
+            Kshm->items[Kshm->totalItems] = a;
+            Kshm->totalItems++;
+        }
+        fclose(f);
+        Kshm->realizado = 1;
+
+    } else if (CRUD == 3) {
+        // LIMPIAR — borrar archivo
+        remove(archivo);
+        Kshm->totalItems = 0;
+        Kshm->realizado = 1;
+    }
+}
+
+
 void CRUDventas(ventaShm *Vshm, int CRUD){
 
     // 0=crear, 1=leer
