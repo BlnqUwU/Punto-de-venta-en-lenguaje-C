@@ -41,6 +41,15 @@ void AgregarProducto(){
     int l = sizeof(DatosProducto)/sizeof(DatosProducto[0]);
 
     while(1) {
+        if (!conectarServidor()) {
+            ServidorSinConexion();
+        }
+        if (has_colors()) {
+            start_color();
+            init_pair(1, COLOR_BLACK, COLOR_BLUE);
+        }
+
+        bkgd(COLOR_PAIR(1));
         curs_set(0);
         clear();
 
@@ -202,6 +211,15 @@ void EditarUsuario(usuario user){
     int l = sizeof(DatosUsuario)/sizeof(DatosUsuario[0]);
 
     while(1) {
+        if (!conectarServidor()) {
+            ServidorSinConexion();
+        }
+        if (has_colors()) {
+            start_color();
+            init_pair(1, COLOR_BLACK, COLOR_BLUE);
+        }
+
+        bkgd(COLOR_PAIR(1));
         curs_set(0);
         clear();
 
@@ -415,6 +433,15 @@ void VentaDiaria(){
 
 
     while(1) {
+        if (!conectarServidor()) {
+            ServidorSinConexion();
+        }
+        if (has_colors()) {
+            start_color();
+            init_pair(1, COLOR_BLACK, COLOR_BLUE);
+        }
+
+        bkgd(COLOR_PAIR(1));
         curs_set(0);
         clear();
         cat=ObtenerCatalogo();
@@ -523,6 +550,15 @@ void ventas(listaventa ventas){
 
 
     while(1) {
+        if (!conectarServidor()) {
+            ServidorSinConexion();
+        }
+        if (has_colors()) {
+            start_color();
+            init_pair(1, COLOR_BLACK, COLOR_BLUE);
+        }
+
+        bkgd(COLOR_PAIR(1));
         curs_set(0);
         clear();
         int n=ventas->NE;
@@ -640,6 +676,15 @@ void GenerarReportes(){
     keypad(stdscr, TRUE);
 
     while(1) {
+        if (!conectarServidor()) {
+            ServidorSinConexion();
+        }
+        if (has_colors()) {
+            start_color();
+            init_pair(1, COLOR_BLACK, COLOR_BLUE);
+        }
+
+        bkgd(COLOR_PAIR(1));
         curs_set(0);
         clear();
 
@@ -727,6 +772,15 @@ void AdministrarCatalogo(){
 
     while(1) {
         //cargarCatalogoAdmin(cat);
+        if (!conectarServidor()) {
+            ServidorSinConexion();
+        }
+        if (has_colors()) {
+            start_color();
+            init_pair(1, COLOR_BLACK, COLOR_BLUE);
+        }
+
+        bkgd(COLOR_PAIR(1));
         curs_set(0);
         clear();
         int n=cat->NE;
@@ -815,7 +869,10 @@ void AdministrarCatalogo(){
                     elegido= getarticulo(opcion,cat);
                     curs_set(0);
                     clear();
-                    mvprintw(LINES/2, (COLS/2)-strlen("Cuantas unidades de  desea quitar o agregar al catalogo?: "),
+                    int col=(COLS/2)-strlen("Cuantas unidades de  desea quitar o agregar al catalogo?: ")-strlen(elegido.producto);
+                    if(col<0)
+                        col=0;
+                    mvprintw(LINES/2, col,
                             "Cuantas unidades de %s desea quitar o agregar al catalogo?: ", elegido.producto);
                     move((LINES/2),(COLS/2)+strlen("Cuantas unidades de  desea quitar o agregar al carrito?: ")+strlen(elegido.producto));
                     clrtoeol();
@@ -825,6 +882,8 @@ void AdministrarCatalogo(){
                     cantidad=atoi(aux);
                     if((elegido.cantidad+cantidad)<=0){
                         enviararticulo(elegido, 3, 0);
+                        curs_set(0);
+                        clear();
                         ImprimirCentrado(LINES/2, "Producto eliminado con exito.");
                         getch();
                         return;
@@ -874,6 +933,15 @@ void AdministrarUsuarios(){
 
 
     while(1) {
+        if (!conectarServidor()) {
+            ServidorSinConexion();
+        }
+        if (has_colors()) {
+            start_color();
+            init_pair(1, COLOR_BLACK, COLOR_BLUE);
+        }
+
+        bkgd(COLOR_PAIR(1));
         curs_set(0);
         clear();
         int n=usuarios->NE;
@@ -883,25 +951,26 @@ void AdministrarUsuarios(){
         ImprimirCentrado(5, "Punto de venta");
         ImprimirCentrado(6, "Selecciona una opcion");
 
-        mvprintw(8, 25-strlen("nombre")/2, "Nombre");
-        mvprintw(8, 70-strlen("apellido")/2, "Apellido");
-        mvprintw(8, 115-strlen("correo")/2, "Correo");
-        mvprintw(8, 175-strlen("usuario")/2, "Usuario");
+        mvprintw(8, (COLS/8)-strlen("nombre")/2, "Nombre");
+        mvprintw(8, (int)(COLS/2.854)-strlen("apellido")/2, "Apellido");
+        mvprintw(8, (int)(COLS/1.734)-strlen("correo")/2, "Correo");
+        mvprintw(8, (int)(COLS/1.141)-strlen("usuario")/2, "Usuario");
         refresh();
 
         char pre[50];
         char cant[50];
         int pos = 0;
-        if (opcion < n && opcion >= 30) {
-            pos = opcion - 30 + 1;
+        int totalamostrar=(LINES-11)-(LINES/4);
+        if (opcion < n && opcion >= totalamostrar) {
+            pos = opcion - totalamostrar + 1;
         } else if (opcion < n) {
             pos = 0;
         }
         if(!empty(usuarios))//verifica si hay usuarios
         //imprime el catalogo
-        for (int i = pos; i < n && (i - pos) < 30; i++) {
+        for (int i = pos; i < n && (i - pos) < totalamostrar; i++) {
             info ac = get(i, usuarios);
-            int fila = (LINES / 2) - (30 / 2) + (i - pos);
+            int fila = (LINES / 2) - (totalamostrar / 2) + (i - pos)+1;
 
             move(fila, 0);
             clrtoeol();
@@ -909,10 +978,10 @@ void AdministrarUsuarios(){
             if (i == opcion)
                 attron(A_REVERSE);
 
-            mvprintw(fila, 25 - strlen(ac.u.nombre) / 2, "%s", ac.u.nombre);
-            mvprintw(fila, 70 - strlen(ac.u.apellido) / 2, "%s", ac.u.apellido);
-            mvprintw(fila, 115 - strlen(ac.u.correo) / 2, "%s", ac.u.correo);
-            mvprintw(fila, 175 - strlen(ac.u.usr) / 2, "%s", ac.u.usr);
+            mvprintw(fila, (COLS/8) - strlen(ac.u.nombre) / 2, "%s", ac.u.nombre);
+            mvprintw(fila, (int)(COLS/2.854) - strlen(ac.u.apellido) / 2, "%s", ac.u.apellido);
+            mvprintw(fila, (int)(COLS/1.734) - strlen(ac.u.correo) / 2, "%s", ac.u.correo);
+            mvprintw(fila, (int)(COLS/1.141) - strlen(ac.u.usr) / 2, "%s", ac.u.usr);
 
             attroff(A_REVERSE);
         }
@@ -922,7 +991,7 @@ void AdministrarUsuarios(){
             if(opcion ==n)
                 attron(A_REVERSE);
 
-            ImprimirCentrado(41, menu[0]);
+            ImprimirCentrado((LINES/2)+(totalamostrar/2)+3, menu[0]);
 
             attroff(A_REVERSE);
 
@@ -982,6 +1051,15 @@ void MenuPrincipal(char *usuario){
     keypad(stdscr, TRUE);
 
     while(1) {
+        if (!conectarServidor()) {
+            ServidorSinConexion();
+        }
+        if (has_colors()) {
+            start_color();
+            init_pair(1, COLOR_BLACK, COLOR_BLUE);
+        }
+
+        bkgd(COLOR_PAIR(1));
         curs_set(0);
         clear();
 
@@ -1066,6 +1144,15 @@ void iniciarSesion() {
     int l = sizeof(DatosUsuario)/sizeof(DatosUsuario[0]);
 
     while(errorCount != 3) {
+        if (!conectarServidor()) {
+            ServidorSinConexion();
+        }
+        if (has_colors()) {
+            start_color();
+            init_pair(1, COLOR_BLACK, COLOR_BLUE);
+        }
+
+        bkgd(COLOR_PAIR(1));
         curs_set(0);
         clear();
         ImprimirCentrado((LINES/2) -3, "Iniciar Sesion (Administrador)");
@@ -1088,7 +1175,7 @@ void iniciarSesion() {
         }
 
         if(errorCount>0) //imprime error si es que los datos no son correctos
-            ImprimirCentrado((LINES/2) +11, "Usuario y/o password incorrectos.");
+            ImprimirCentrado((LINES/2) +(LINES/4), "Usuario y/o password incorrectos.");
 
         refresh();
 
@@ -1190,8 +1277,18 @@ void menu() {
     bkgd(COLOR_PAIR(1));
 
     while(1) {
+        if (!conectarServidor()) {
+            ServidorSinConexion();
+        }
+        if (has_colors()) {
+            start_color();
+            init_pair(1, COLOR_BLACK, COLOR_BLUE);
+        }
+
+        bkgd(COLOR_PAIR(1));
         curs_set(0);
         clear();
+
 
         ImprimirCentrado((LINES/2) -3, "Punto de Venta (Administrador)");
         ImprimirCentrado((LINES/2) -2, "Selecciona una opcion");
@@ -1239,9 +1336,48 @@ void menu() {
     }
 }
 
+void ServidorSinConexion(){
+    initscr();
+    set_escdelay(0);
+    noecho();
+    curs_set(0);
+        clear();
+    int tecla;
+    keypad(stdscr, TRUE); 
+    if (has_colors()) {
+        start_color();
+        init_pair(1, COLOR_BLACK, COLOR_MAGENTA);
+    }
+    
+    while (1) {
+        bkgd(COLOR_PAIR(1));
+        if(conectarServidor()){
+            curs_set(0);
+            clear();
+            endwin();
+            return;
+        }
+            curs_set(0);
+        clear();
+            ImprimirCentrado((LINES/2), "Sin conexion al servidor.");
+            tecla=getch();
+            switch (tecla) {
+                case 27:
+                    endwin();
+                    exit(1);
+                default:
+                    break;                
+            
+        }
+        
+    }
+
+
+}
+
 int main() {
     if (conectarServidor() == 0) {
-        return 1;
+        ServidorSinConexion();
     }
     crearAdminSiNoExiste();
     menu();
