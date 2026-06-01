@@ -101,7 +101,10 @@ void Carrito(usuario u){
         sprintf(total, "%.3f", totalpagar);
         }
         //imprime el total a pagar del carrito
-        mvprintw(41, 25 -strlen("Total a pagar: $")- strlen(total) / 2, "TOTAL A PAGAR: $%.3f", totalpagar);
+        int col=(COLS/8) -strlen("Total a pagar: $")- strlen(total) / 2;
+        if(col<0)
+            col=0;
+        mvprintw((LINES/2)+(totalamostrar/2)+3,col, "TOTAL A PAGAR: $%.3f", totalpagar);
         refresh();
         //imprime las opciones disponibles en menu
         for (int i = 0; i < m; i++) {
@@ -192,7 +195,7 @@ void Carrito(usuario u){
                             case 10:
                                 elegido.cantidad=elegido.cantidad-cantidad;
                                 if(elegido.cantidad==0){ //si se quita toda la cantidad del carrito entonces lo quita del carrito y lo añade al catalogo
-                                    enviararticulo(elegido, 4,1);
+                                    enviararticulo(elegido, 3,1);
                                     articulo devolver = elegido;
                                     devolver.cantidad = obtenerCantidadCatalogo(elegido.producto) + cantidad;
                                     enviararticulo(devolver, 2,0);
@@ -546,7 +549,7 @@ int Perfil(usuario u){
                         clrtoeol(); 
                         echo();
                         getstr (aux);
-                        if(strcmp(aux,"") && strcmp(aux, " ")){
+                        if(strcmp(aux,"") && strcmp(aux, " ") && BuscarUsuario(aux)==0){
                             ver[opcion]=0;
                             strcpy(login.usr, aux);
                         }
@@ -560,7 +563,7 @@ int Perfil(usuario u){
                         clrtoeol(); 
                         echo();
                         getstr (aux);
-                        if(strcmp(aux,"") && strcmp(aux, " ") && VerificarCorreo(aux)==1){
+                        if(strcmp(aux,"") && strcmp(aux, " ") && (VerificarCorreo(aux)==1) &&(BuscarCorreo(aux)==0)){
                             ver[opcion]=0;
                             strcpy(login.correo, aux);
                         }else{
