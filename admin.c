@@ -115,8 +115,9 @@ void AgregarProducto(){
                     echo();
                     getstr (aux2);
                     strcpy(aux.producto, aux2);
-                    if(enviararticulo(aux,1,0)||strcmp(aux2, "")==0||strcmp(aux2, " ")==0)
-                        ver[0]=1;
+                        if(BuscarProducto(aux2)||strcmp(aux2, "")==0||strcmp(aux2, " ")==0) {
+                            ver[0]=1;
+                        }
                     else{
                         strcpy(producto.producto, aux2);
                         ver[0]=0;
@@ -760,9 +761,7 @@ void AdministrarCatalogo(){
     };
     int m= sizeof(menu)/sizeof(menu[0]);
 
-    //insertar catalogo de memoria compartida a lista
-
-    //cargarCatalogoAdmin(cat);
+    cat = ObtenerCatalogo();
     articulo elegido;
     set_escdelay(0);
     noecho();
@@ -863,6 +862,8 @@ void AdministrarCatalogo(){
                     return;
                 }else if(opcion==n){
                     AgregarProducto();
+                    liberarlistaarticulo(&cat);
+                    cat = ObtenerCatalogo();
                     opcion=0;
                     break;
                 }else{//cualquier elemento del catalogo seleccionado

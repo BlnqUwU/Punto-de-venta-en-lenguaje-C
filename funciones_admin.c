@@ -9,51 +9,27 @@
 // ──────────────────────────────────────────
 
 int buscarAdmin(char *usr) {
-    char linea[300];
-    FILE *archivo = fopen(ARCHIVO_ADMINS, "r");
-    if (!archivo) return 0;
 
-    while (fgets(linea, sizeof(linea), archivo)) {
-        char nombre[100], apellido[100], correo[100], u[100], pass[100];
-        sscanf(linea, "%[^,],%[^,],%[^,],%[^,],%[^,\n]",
-               nombre, apellido, correo, u, pass);
-        if (strcmp(u, usr) == 0) {
-            fclose(archivo);
+    lista admins = ObtenerUsuariosAdmin();
+    for (int i = 0; i < admins->NE; i++) {
+        info inf = get(i, admins);
+        if (strcmp(inf.u.usr, usr) == 0) {
+            liberarlista(&admins);
             return 1;
         }
     }
-    fclose(archivo);
+    liberarlista(&admins);
     return 0;
+
 }
 
 int registrarAdmin(usuario a) {
-    FILE *archivo = fopen(ARCHIVO_ADMINS, "a");
-    if (!archivo) {
-        perror("registrarAdmin: fopen");
-        return 0;
-    }
-    fprintf(archivo, "%s,%s,%s,%s,%s,\n",
-            a.nombre, a.apellido, a.correo, a.usr, a.pass);
-    fclose(archivo);
-    return 1;
+
+    return enviarusuarioAdminIPC(a, 0, NULL);
 }
 
 int solicitarSesionAdmin(usuario a) {
-    char linea[300];
-    FILE *archivo = fopen(ARCHIVO_ADMINS, "r");
-    if (!archivo) return 0;
-
-    while (fgets(linea, sizeof(linea), archivo)) {
-        char nombre[100], apellido[100], correo[100], usr[100], pass[100];
-        sscanf(linea, "%[^,],%[^,],%[^,],%[^,],%[^,\n]",
-               nombre, apellido, correo, usr, pass);
-        if (strcmp(usr, a.usr) == 0 && strcmp(pass, a.pass) == 0) {
-            fclose(archivo);
-            return 1;
-        }
-    }
-    fclose(archivo);
-    return 0;
+    return solicitarSesionAdmins(a);
 }
 
 void crearAdminSiNoExiste() {
@@ -67,6 +43,7 @@ void crearAdminSiNoExiste() {
         hash(pass_plano, a.pass);
         registrarAdmin(a);
         printf("[SERVIDOR] Admin creado. usr: admin | pass: admin\n");
+
     }
 }
 
@@ -75,21 +52,8 @@ void crearAdminSiNoExiste() {
 // ──────────────────────────────────────────
 
 int SolicitarSesion(usuario a) {
-    char linea[200];
-    FILE *archivo = fopen(ARCHIVO_ADMINS, "r");
-    if (archivo == NULL) return 0;
 
-    while (fgets(linea, sizeof(linea), archivo)) {
-        char nombre[100], apellido[100], correo[100], usr[100], pass[100];
-        sscanf(linea, "%[^,],%[^,],%[^,],%[^,],%[^,\n]",
-               nombre, apellido, correo, usr, pass);
-        if (strcmp(usr, a.usr) == 0 && strcmp(pass, a.pass) == 0) {
-            fclose(archivo);
-            return 1;
-        }
-    }
-    fclose(archivo);
-    return 0;
+    return solicitarSesionAdmin(a);
 }
 
 // ──────────────────────────────────────────

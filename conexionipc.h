@@ -22,11 +22,15 @@ void limpiarCarrito();
 
 
 int enviarusuario(usuario u, int CRUD, char *nombreUsuario); //lee llaves primarias (usuario correo)
+int enviarusuarioAdminIPC(usuario u, int CRUD, char *nombreUsuario); //lee llaves primarias (usuario correo)
 int enviarCorreo(usuario u, int CRUD);
 
 int solicitarSesion(usuario u);
+int solicitarSesionAdmins(usuario u);
 usuario obtenerUsuario(usuario u);
+usuario obtenerUsuarioAdmin(usuario u);
 lista ObtenerUsuarios();
+lista ObtenerUsuariosAdmin();
 
 listaventa obtenerVentas(int tipo); //0 DIARIO, 1 SEMANAL, 2 MENSUAL
 void enviarVenta(venta v);

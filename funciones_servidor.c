@@ -60,46 +60,55 @@ void CRUDusuario(usuarioShm *Ushm, int CRUD){
 
     // CRUD: 0=crear 1=leer/sesion 2=actualizar 3=borrar
 
+    // BD = 0 usuarios, 1 = admin
+
+    char *archivo_bd = (Ushm -> BD == 1) ? "admins.dat" : ARCHIVO_USR;
+    usuario *arr = (Ushm -> BD == 1) ? Ushm -> admins : Ushm -> usuarios;
+    int     *total   = (Ushm->BD == 1) ? &Ushm-> totalAdmins : &Ushm->totalUsuarios;
+    int      maxArr  = (Ushm->BD == 1) ? MAX_ADMINS : MAX_USUARIOS;
+
+
     if (CRUD == 0) {
         //CREAR
-        FILE *archivo = fopen(ARCHIVO_USR, "a");
-        if (!archivo) { Ushm -> realizado = -1; return; }
-
-        usuario u = Ushm -> u;
+        FILE *archivo = fopen(archivo_bd, "a");
+        if (!archivo) { Ushm->realizado = -1; return; }
+        usuario u = Ushm->u;
         fprintf(archivo, "%s,%s,%s,%s,%s,\n",
                 u.nombre, u.apellido, u.correo, u.usr, u.pass);
         fclose(archivo);
-        if (Ushm -> totalUsuarios < MAX_USUARIOS) {
-            Ushm -> usuarios[Ushm -> totalUsuarios] = u;
-            Ushm -> totalUsuarios++;
+        if (*total < maxArr) {
+            arr[*total] = u;
+            (*total)++;
         }
-        Ushm -> realizado = 1;
+        Ushm->realizado = 1;
+
     } else if (CRUD == 1) {
         //LEER
-        for (int i = 0; i < Ushm -> totalUsuarios; i++) {
-            if (strcmp(Ushm -> usuarios[i].usr, Ushm -> u.usr) == 0) {
-                if (strcmp(Ushm -> usuarios[i].pass, "") != 0) {
-                    if (strcmp(Ushm -> usuarios[i].pass, Ushm -> u.pass) != 0) {
-                        Ushm -> realizado = -1;
+        for (int i = 0; i < *total; i++) {
+            if (strcmp(arr[i].usr, Ushm->u.usr) == 0) {
+                if (strcmp(arr[i].pass, "") != 0) {
+                    if (strcmp(arr[i].pass, Ushm->u.pass) != 0) {
+                        Ushm->realizado = -1;
                         return;
                     }
                 }
-                Ushm -> u = Ushm -> usuarios[i];
-                Ushm -> realizado = 1;
+                Ushm->u = arr[i];
+                Ushm->realizado = 1;
                 return;
             }
         }
-        Ushm -> realizado = -1;
+        Ushm->realizado = -1;
+
     } else if (CRUD == 2) {
         // ACTUALIZAR
 
         char *buscar = (strlen(Ushm->usr_original) > 0) ? Ushm->usr_original : Ushm->u.usr;
 
-        for (int i = 0; i < Ushm -> totalUsuarios; i++) {
-            if (strcmp(Ushm -> usuarios[i].usr, buscar) == 0) {
-                Ushm -> usuarios[i] = Ushm -> u;
+        for (int i = 0; i < *total; i++) {
+            if (strcmp(arr[i].usr, buscar) == 0) {
+                arr[i] = Ushm->u; // CAMBIO: usar arr
 
-                FILE *original = fopen(ARCHIVO_USR, "r");
+                FILE *original = fopen(archivo_bd, "r");
                 FILE *temp = fopen("temp_usr.txt", "w");
 
                 if (original && temp) {
@@ -117,8 +126,8 @@ void CRUDusuario(usuarioShm *Ushm, int CRUD){
                     }
                     fclose(original);
                     fclose(temp);
-                    remove(ARCHIVO_USR);
-                    rename("temp_usr.txt", ARCHIVO_USR);
+                    remove(archivo_bd);
+                    rename("temp_usr.txt", archivo_bd);
                 }
                 Ushm -> usr_original[0] = '\0';
                 Ushm -> realizado = 1;
@@ -126,15 +135,14 @@ void CRUDusuario(usuarioShm *Ushm, int CRUD){
             }
         }
         Ushm -> realizado = -1;
-
     } else if (CRUD == 3) {
         // BORRAR
-        for (int i = 0; i < Ushm -> totalUsuarios; i++) {
-            if (strcmp(Ushm -> usuarios[i].usr, Ushm -> u.usr) == 0) {
-                Ushm -> usuarios[i] = Ushm -> usuarios[Ushm -> totalUsuarios - 1];
-                Ushm -> totalUsuarios--;
+        for (int i = 0; i < *total; i++) {
+            if (strcmp(arr[i].usr, Ushm->u.usr) == 0) {
+                arr[i] = arr[*total - 1];
+                (*total)--;
 
-                FILE *original = fopen(ARCHIVO_USR, "r");
+                FILE *original = fopen(archivo_bd, "r");
                 FILE *temp = fopen("temp_usr.txt", "w");
 
                 if (original && temp) {
@@ -146,14 +154,15 @@ void CRUDusuario(usuarioShm *Ushm, int CRUD){
                     }
                     fclose(original);
                     fclose(temp);
-                    remove(ARCHIVO_USR);
-                    rename("temp_usr.txt", ARCHIVO_USR);
+                    remove(archivo_bd);
+                    rename("temp_usr.txt", archivo_bd);
                 }
                 Ushm -> realizado = 1;
                 return;
             }
         }
         Ushm -> realizado = -1;
+
     }
 }
 

@@ -285,6 +285,34 @@ int enviarusuario(usuario u, int CRUD, char *nombreUsuario){
     Ushm->u         = u;
     Ushm->CRUD      = CRUD;
     Ushm->realizado = 0;
+    Ushm -> BD      = 0;
+    if (nombreUsuario != NULL) {
+        strncpy(Ushm -> usr_original, nombreUsuario, sizeof(Ushm -> usr_original) - 1);
+    } else {
+        Ushm -> usr_original[0] = '\0';
+    }
+    upSem(semID, SEM_USR);
+
+    Cshm -> tipo = 1;
+    upSem(semID, SEM_REQ);
+    downSem(semID, SEM_ACK);
+
+    return Ushm -> realizado;
+}
+
+int enviarusuarioAdminIPC(usuario u, int CRUD, char *nombreUsuario){
+    //GUARDA ATRIBUTOS EN SHM DE Admin
+
+    if (!Ushm) return 0;
+
+    //SI CRUD==1 DEBE ESPERAR RESPUESTA DE SERVIDOR Y RETORNAR LA VARIABLE
+    //REALIZADO
+
+    downSem(semID, SEM_USR);
+    Ushm->u         = u;
+    Ushm->CRUD      = CRUD;
+    Ushm->realizado = 0;
+    Ushm -> BD      = 1;
     if (nombreUsuario != NULL) {
         strncpy(Ushm -> usr_original, nombreUsuario, sizeof(Ushm -> usr_original) - 1);
     } else {
@@ -310,6 +338,28 @@ int solicitarSesion(usuario u){
     Ushm -> u = u;
     Ushm -> CRUD = 1;
     Ushm -> realizado = 0;
+    Ushm -> BD      = 0;
+    upSem(semID, SEM_USR);
+
+    Cshm -> tipo = 1;
+    upSem(semID, SEM_REQ);
+    downSem(semID, SEM_ACK);
+
+    return Ushm -> realizado;
+}
+
+int solicitarSesionAdmins(usuario u){
+    //GUARDA USUARIO Y CRUD==1 EN SHM DE USUARIO
+
+    if (!Ushm) return 0;
+
+    //ESPERA RESPUESTA DEL SERVIDOR, RETORNA LA VARIABLE REALIZADO
+
+    downSem(semID, SEM_USR);
+    Ushm -> u = u;
+    Ushm -> CRUD = 1;
+    Ushm -> realizado = 0;
+    Ushm -> BD = 1;
     upSem(semID, SEM_USR);
 
     Cshm -> tipo = 1;
@@ -331,6 +381,30 @@ usuario obtenerUsuario(usuario u){
     Ushm -> u = u;
     Ushm -> CRUD = 1;
     Ushm -> realizado = 0;
+    Ushm -> BD = 0;
+    upSem(semID, SEM_USR);
+
+    Cshm -> tipo = 1;
+    upSem(semID, SEM_REQ);
+    downSem(semID, SEM_ACK);
+
+    if (Ushm -> realizado == 1) return Ushm -> u;
+    return vacio;
+}
+
+usuario obtenerUsuarioAdmin(usuario u){
+
+    usuario vacio = {"","","","",""};
+    if (!Ushm) return vacio;
+
+    //GUARDA ATRIBUTOS EN SHM Y CRUD==1 DE USUARIO
+    //ESPERA RESPUESTA DEL SERVIDOR Y RETORNA EL USUARIO RECIBIDO DEL SERVIDOR
+
+    downSem(semID, SEM_USR);
+    Ushm -> u = u;
+    Ushm -> CRUD = 1;
+    Ushm -> realizado = 0;
+    Ushm -> BD = 1;
     upSem(semID, SEM_USR);
 
     Cshm -> tipo = 1;
@@ -351,6 +425,36 @@ lista ObtenerUsuarios(){
     downSem(semID, SEM_USR);
     Ushm->CRUD = 1;
     Ushm -> realizado = 0;
+    Ushm -> BD = 0;
+    upSem(semID, SEM_USR);
+
+    Cshm -> tipo = 1;
+    upSem(semID, SEM_REQ);
+    downSem(semID, SEM_ACK);
+
+    downSem(semID, SEM_USR);
+    for (int i = 0; i < Ushm -> totalUsuarios; i++) {
+        info inf;
+        inf.u = Ushm -> usuarios[i];
+        add(usuarios -> NE, inf, usuarios);
+    }
+
+    upSem(semID, SEM_USR);
+
+    return usuarios;
+}
+
+lista ObtenerUsuariosAdmin(){
+    lista usuarios;
+    crearlista(&usuarios);
+    if (!Ushm) return usuarios;
+
+    //GUARDA LOS USUARIOS DE LA MEMORIA COMPARTIDA Y CRUD==1 Y LA RETORNA
+
+    downSem(semID, SEM_USR);
+    Ushm->CRUD = 1;
+    Ushm -> realizado = 0;
+    Ushm -> BD = 1;
     upSem(semID, SEM_USR);
 
     Cshm -> tipo = 1;

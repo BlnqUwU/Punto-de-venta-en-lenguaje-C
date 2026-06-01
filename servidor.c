@@ -184,6 +184,40 @@ int main() {
         printf("[SERVIDOR] Sin usuarios previos.\n");
     }
 
+    // cargar admins a Ushm->admins[]
+    FILE *fAdm = fopen("admins.dat", "r");
+    if (fAdm) {
+        char lineaAdm[300];
+        Ushm->totalAdmins = 0;
+        while (fgets(lineaAdm, sizeof(lineaAdm), fAdm) && Ushm->totalAdmins < MAX_ADMINS) {
+            usuario a;
+            sscanf(lineaAdm, "%[^,],%[^,],%[^,],%[^,],%[^,\n]",
+                   a.nombre, a.apellido, a.correo, a.usr, a.pass);
+            Ushm->admins[Ushm->totalAdmins] = a;
+            Ushm->totalAdmins++;
+        }
+        fclose(fAdm);
+        printf("[SERVIDOR] Admins cargados: %d.\n", Ushm->totalAdmins);
+    } else {
+        // crear admin por defecto con hash de "admin"
+        usuario a;
+        char pass_plano[] = "admin";
+        strcpy(a.nombre, "Admin");
+        strcpy(a.apellido, "Sistema");
+        strcpy(a.correo, "admin@sistema.com");
+        strcpy(a.usr, "admin");
+        hash(pass_plano, a.pass);
+        Ushm->admins[0] = a;
+        Ushm->totalAdmins = 1;
+        FILE *fNew = fopen("admins.dat", "w");
+        if (fNew) {
+            fprintf(fNew, "%s,%s,%s,%s,%s,\n", a.nombre, a.apellido, a.correo, a.usr, a.pass);
+            fclose(fNew);
+        }
+        printf("[SERVIDOR] Admin por defecto creado. usr: admin | pass: admin\n");
+    }
+
+
 
     // CREAR SEMAFOROS
     semID = semget(keySem, 5, IPC_CREAT | PERMISOS);

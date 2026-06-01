@@ -11,6 +11,7 @@
 #define PERMISOS       0666
 #define MAX_PRODUCTOS  50
 #define MAX_USUARIOS   100
+#define MAX_ADMINS   100
 #define MAX_VENTAS     500
 #define MAX_CARRITO    50
 #define ARCHIVO_CAT    "catalogo.dat"
@@ -45,12 +46,15 @@ typedef struct {
 
 typedef struct {
     usuario usuarios[MAX_USUARIOS];
+    usuario admins[MAX_ADMINS];
     int     totalUsuarios;
+    int     totalAdmins;
     usuario u;          // usuario para operacion individual
     char    usr_original[100];
     char    atributo[100];
     int     CRUD;
     int     realizado;
+    int     BD;
 } usuarioShm;
 
 
@@ -83,15 +87,4 @@ typedef struct {
 //void desencriptar(const char *entrada, const char *salida);
 //int  guardarInventario(InventarioShm *shm);
 //int  cargarInventario(InventarioShm *shm);
-
-// ──────────────────────────────────────────
-// PROTOTIPOS — INVENTARIO
-// ──────────────────────────────────────────
-/*
-int agregarProducto(InventarioShm *shm, Producto p);
-int eliminarProducto(InventarioShm *shm, int id);
-int modificarProducto(InventarioShm *shm, int id, Producto nuevo);
-int buscarProducto(InventarioShm *shm, int id);
-int venderProducto(InventarioShm *shm, int id, int cantidad, const char *usr);
-*/
 #endif
