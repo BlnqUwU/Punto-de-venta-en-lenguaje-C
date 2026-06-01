@@ -1,3 +1,4 @@
+#include "conexionipc.h"
 #include "cliente.h"
 #include "listas.h"
 
@@ -15,48 +16,34 @@ int VerificarCorreo(char *correo){
 }
 
 int BuscarCorreo(char *correo){
-    char linea[100];
-    FILE *archivo;
-    archivo = fopen("usuarios.txt", "r"); //abre usuarios.txt en modo lectura
-    if (archivo != NULL) {
-        while (fgets(linea, sizeof(linea), archivo)) { //copia lo que hay en archivo
-            char *token = strtok(linea, ",");//elimina todo despues de una coma
-            token = strtok(NULL, ",");
-            token = strtok(NULL, ",");//se hace hasta quedarse con lo que haya entre la segunda y tercera coma
-            while (token != NULL) {
-                if (strcmp(token, correo) == 0) {//compara lo que hay en token con lo que hay en puntero
-                    fclose(archivo);
-                    return 1;//si coincide, cierra el archivo, regresa 1 y termina
-                }
-                token = strtok(NULL, ",");//va a la siguiente linea en el archivo
-            }
+
+    lista usuarios = ObtenerUsuarios();
+    for (int i = 0; i < usuarios->NE; i++) {
+        info inf = get(i, usuarios);
+        if (strcmp(inf.u.correo, correo) == 0) {
+            liberarlista(&usuarios);
+            return 1;
         }
-        fclose(archivo);
     }
+    liberarlista(&usuarios);
+    return 0;
+
     return 0;//si no coincide el token con correo, retorna 0 y termina
 }
 
 //misma logica que BuscarCorreo
 int BuscarUsuario(char *usr){
-    char linea[100];
-    FILE *archivo;
-    archivo = fopen("usuarios.txt", "r");
-    if (archivo != NULL) {
-        while (fgets(linea, sizeof(linea), archivo)) {
-            char *token = strtok(linea, ",");
-            token = strtok(NULL, ",");
-            token = strtok(NULL, ",");
-            token = strtok(NULL, ",");
-            while (token != NULL) {
-                if (strcmp(token, usr) == 0) {
-                    fclose(archivo);
-                    return 1;
-                }
-                token = strtok(NULL, ",");
-            }
+
+    lista usuarios = ObtenerUsuarios();
+    for (int i = 0; i < usuarios->NE; i++) {
+        info inf = get(i, usuarios);
+        if (strcmp(inf.u.usr, usr) == 0) {
+            liberarlista(&usuarios);
+            return 1;
         }
-        fclose(archivo);
     }
+    liberarlista(&usuarios);
+
     return 0;
 }
 
@@ -101,95 +88,25 @@ int ComprobarPassword(char *pass){
 
 //rescribe los datos ingresados del usuario en un archivo de texto
 int RegistrarUsuario(usuario u, char *arch){
-    FILE *archivo = fopen(arch, "a");
-        if (archivo != NULL) {
-            if(strcmp(u.nombre, "")==0)
-                fprintf(archivo, " ,");
-            else
-                fprintf(archivo, "%s,", u.nombre);
-            if(strcmp(u.apellido, "")==0)
-                fprintf(archivo, " ,");
-            else
-                fprintf(archivo, "%s,", u.apellido);
-            fprintf(archivo, "%s,", u.correo);
-            fprintf(archivo, "%s,", u.usr);
-            fprintf(archivo, "%s,", u.pass);
-            fprintf(archivo, "\n");
-            fclose(archivo);
-            return 1;//si el registro se hizo retorna 1 y termina
-        } else {
-            return 0;//si no se pudo crear/abrir el archivo retorna 0 y termina
-        }
+    return enviarusuario(u, 0, NULL);
 }
 
 //verifica que exista el usuario y que su contraseña sea correcta
 int SolicitarSesion(usuario u){
-    char linea[200];
-    FILE *archivo = fopen("usuarios.txt", "r");
 
-    if (archivo == NULL) return 0;
-
-    while (fgets(linea, sizeof(linea), archivo)) {
-
-        char nombre[50], apellido[50], correo[50];
-        char usr[50], pass[100];
-
-        sscanf(linea, "%[^,],%[^,],%[^,],%[^,],%[^,\n]",
-               nombre, apellido, correo, usr, pass);
-
-        if(strcmp(usr, u.usr) == 0 &&
-            strcmp(pass, u.pass) == 0) {
-
-            fclose(archivo);
-            return 1; // login correcto
-        }
-    }
-
-    fclose(archivo);
-    return 0; // login incorrecto
+    return solicitarSesion(u);
 }
 
 usuario SolicitarPerfil(char *usr){
-    char linea[200];
-    usuario user = {"No usuario","si encuentras esto","felicidades","rompiste a alguien que siempre sonreia.",""};
-    FILE *archivo = fopen("usuarios.txt", "r");
 
-    if (archivo == NULL) 
-        return user;
+    usuario u = {"","","","",""};
+    strncpy(u.usr, usr, sizeof(u.usr) - 1);
+    return obtenerUsuario(u);
 
-    while (fgets(linea, sizeof(linea), archivo)) {
-
-        sscanf(linea, "%[^,],%[^,],%[^,],%[^,],%[^,\n]",
-               user.nombre, user.apellido, user.correo, user.usr, user.pass);
-        if(strcmp(user.usr, usr) == 0){
-            fclose(archivo);
-            return user; // login correcto
-        }
-    }
-    return user;
 }
 
 //modifica un atributo especifico del usuario y guarda los cambios en el archivo correspondiente
 int ModificarAtributo(usuario u, char *usr){
-    char linea[200];
-    FILE *archivo = fopen("usuarios.txt", "r");
-    usuario user = {"","","","",""};
 
-    if (archivo == NULL) return 0;
-
-    while (fgets(linea, sizeof(linea), archivo)) {
-
-        sscanf(linea, "%[^,],%[^,],%[^,],%[^,],%[^,\n]",
-               user.nombre, user.apellido, user.correo, user.usr, user.pass);
-        if(strcmp(user.usr, usr) == 0){
-            RegistrarUsuario(u, "temp.txt");
-        }else{
-            RegistrarUsuario(user, "temp.txt");
-        }
-        
-    }
-     fclose(archivo);
-        remove("usuarios.txt");
-        rename("temp.txt", "usuarios.txt");
-        return 1;   
+    return enviarusuario(u, 2, usr);
 }

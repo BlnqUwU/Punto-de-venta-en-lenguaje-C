@@ -2,7 +2,7 @@
 #define SERVIDOR_H
 #include "listas.h"
 #include "memoria_compartida.h"
-#include "utilidades_back.h"
+#include "utilidades.h"
 
 // ──────────────────────────────────────────
 // INDICES DE SEMAFOROS

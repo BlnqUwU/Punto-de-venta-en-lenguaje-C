@@ -3,7 +3,7 @@
 
 #include "memoria_compartida.h"
 #include "listas.h"
-#include "utilidades_back.h"
+#include "utilidades.h"
 
 int  conectarServidor();
 void desconectarServidor();

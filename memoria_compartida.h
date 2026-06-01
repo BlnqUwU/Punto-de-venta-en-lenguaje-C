@@ -1,7 +1,7 @@
 #ifndef MEMORIA_COMPARTIDA_H
 #define MEMORIA_COMPARTIDA_H
 
-#include "utilidades_back.h"
+#include "utilidades.h"
 #include "listas.h"
 
 // ──────────────────────────────────────────
