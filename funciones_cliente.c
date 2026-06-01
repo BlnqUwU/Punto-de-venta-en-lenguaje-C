@@ -14,6 +14,39 @@ int VerificarCorreo(char *correo){
     return 0; //si no existe @ ni . entonces retorna 0 y termina
 }
 
+int BuscarCorreo(char *correo){
+
+    lista usuarios = ObtenerUsuarios();
+    for (int i = 0; i < usuarios->NE; i++) {
+        info inf = get(i, usuarios);
+        if (strcmp(inf.u.correo, correo) == 0) {
+            liberarlista(&usuarios);
+            return 1;
+        }
+    }
+    liberarlista(&usuarios);
+    return 0;
+
+    return 0;//si no coincide el token con correo, retorna 0 y termina
+}
+
+//misma logica que BuscarCorreo
+int BuscarUsuario(char *usr){
+
+    lista usuarios = ObtenerUsuarios();
+    for (int i = 0; i < usuarios->NE; i++) {
+        info inf = get(i, usuarios);
+        if (strcmp(inf.u.usr, usr) == 0) {
+            liberarlista(&usuarios);
+            return 1;
+        }
+    }
+    liberarlista(&usuarios);
+
+    return 0;
+}
+
+
 int ComprobarPassword(char *pass){
     int i = 0;
     int Verificaciones = 0;
@@ -51,10 +84,28 @@ int ComprobarPassword(char *pass){
 
     return Verificaciones;
 }
-int BuscarCorreo(char *correo){
-    return 0;
-}
-int BuscarUsuario(char *usr){
-    return 0;
+
+//rescribe los datos ingresados del usuario en un archivo de texto
+int RegistrarUsuario(usuario u, char *arch){
+    return enviarusuario(u, 0, NULL);
 }
 
+//verifica que exista el usuario y que su contraseña sea correcta
+int SolicitarSesion(usuario u){
+
+    return solicitarSesion(u);
+}
+
+usuario SolicitarPerfil(char *usr){
+
+    usuario u = {"","","","",""};
+    strncpy(u.usr, usr, sizeof(u.usr) - 1);
+    return obtenerUsuario(u);
+
+}
+
+//modifica un atributo especifico del usuario y guarda los cambios en el archivo correspondiente
+int ModificarAtributo(usuario u, char *usr){
+
+    return enviarusuario(u, 2, usr);
+}

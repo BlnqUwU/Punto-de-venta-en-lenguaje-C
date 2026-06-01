@@ -87,7 +87,7 @@ void Carrito(usuario u){
             mvprintw(fila, (COLS/8) - strlen(ac.producto) / 2, "%s", ac.producto);
             mvprintw(fila, (COLS/2) - strlen(cant) / 2, "%d", ac.cantidad);
             mvprintw(fila, (int)(COLS/1.2) - strlen(pre) / 2, "$%.2f", ac.precio);
-            
+
             
             attroff(A_REVERSE);
         }
@@ -163,7 +163,7 @@ void Carrito(usuario u){
                     int col=(COLS/2)-strlen("Cuantas unidades de  desea quitar del carrito?: ")-strlen(elegido.producto);
                     if(col<0)
                         col=0;
-                    mvprintw(LINES/2, col, 
+                    mvprintw(LINES/2, col,
                             "Cuantas unidades de %s desea quitar del carrito?: ", elegido.producto);
                     mvprintw((LINES/2)+2, (COLS/2)-10, "%c: Agregar",24);
                     mvprintw((LINES/2)+2, (COLS/2)+10, "%c: Quitar",25);
@@ -208,7 +208,7 @@ void Carrito(usuario u){
                                 salir=1;
                             break;
                             case 27:// se preciono la tecla esc
-                                //liberarlistaarticulo(&carrito);
+
                                 endwin();
                             return;
                         }
@@ -264,7 +264,7 @@ void Catalogo(usuario u){
         int n=cat->NE;
         int salir=0;
         int col=0;
-        
+
         ImprimirCentrado(5, "Punto de venta");
         ImprimirCentrado(6, "Selecciona una opcion");
 
@@ -286,7 +286,7 @@ void Catalogo(usuario u){
         //imprime el catalogo
         for (int i = pos; i < n && (i - pos) < totalamostrar; i++) {
             articulo ac = getarticulo(i, cat);
-            
+
             int fila = (LINES / 2) - (totalamostrar / 2) + (i - pos);
 
             move(fila, 0);
@@ -341,7 +341,7 @@ void Catalogo(usuario u){
                     col=(COLS/2)-strlen("Cuantas unidades de  desea agregar al carrito?: ")-strlen(elegido.producto);
                     if(col<0)
                         col=0;
-                    mvprintw(LINES/2, col, 
+                    mvprintw(LINES/2, col,
                             "Cuantas unidades de %s desea agregar al carrito?: ", elegido.producto);
                     mvprintw((LINES/2)+2, (COLS/2)-10, "%c: Agregar",24);
                     mvprintw((LINES/2)+2, (COLS/2)+10, "%c: Quitar",25);
@@ -377,6 +377,7 @@ void Catalogo(usuario u){
                             break;
                             case 27:
                                 salir=1;
+                            liberarlistaarticulo(&cat);
                                 endwin();
                             break;
                         }
@@ -771,11 +772,11 @@ void registrar() {
             if(cor!=0){
                 move((LINES/2)+(LINES/4)+4, 0);
                 clrtoeol();
-                mvprintw((LINES/2)+(LINES/4)+4, col, "El usuario %s ya existe", aux1);  
+                mvprintw((LINES/2)+(LINES/4)+4, col, "El usuario %s ya existe", aux1);
             } else{
                 move((LINES/2)+(LINES/4)+3,col);
                 clrtoeol(); 
-                mvprintw((LINES/2)+(LINES/4)+3, col, "El usuario %s ya existe", aux1);  
+                mvprintw((LINES/2)+(LINES/4)+3, col, "El usuario %s ya existe", aux1);
             }
             
         }
@@ -786,16 +787,16 @@ void registrar() {
             if(cor&&us){
                 move((LINES/2)+(LINES/4)+5, 0);
                 clrtoeol();
-                mvprintw((LINES/2)+(LINES/4)+5, col, "La password no cumple con los requerimientos");  
+                mvprintw((LINES/2)+(LINES/4)+5, col, "La password no cumple con los requerimientos");
             }else if ((cor==1&&cor==2)!=us){
                 move((LINES/2)+(LINES/4)+4, 0);
                 clrtoeol();
-                mvprintw((LINES/2)+(LINES/4)+4, col, "La password no cumple con los requerimientos");  
+                mvprintw((LINES/2)+(LINES/4)+4, col, "La password no cumple con los requerimientos");
             }
         }else{
                 move((LINES/2)+(LINES/4)+3, 0);
                 clrtoeol();
-                mvprintw((LINES/2)+(LINES/4)+3, col, "La password no cumple con los requerimientos");     
+                mvprintw((LINES/2)+(LINES/4)+3, col, "La password no cumple con los requerimientos");
             }
         }
             
@@ -1009,7 +1010,7 @@ void iniciarSesion() {
         bkgd(COLOR_PAIR(1));
         curs_set(0);
         clear();
-        
+
         ImprimirCentrado((LINES/2) -3, "Iniciar Sesion");
 
         //imprime las opciones del menu
@@ -1126,12 +1127,12 @@ void menu() {
     keypad(stdscr, TRUE); 
 
     //si la terminal admite color, inicia los colores negro y cyan para la interfaz
-    
 
-    
+
+
 
     while(1) {
-        
+
         curs_set(0);
         clear();
         if (!conectarServidor()) {
@@ -1147,14 +1148,14 @@ void menu() {
 
         //imprime las opciones del menu
         for(int i = 0; i < n; i++) {
-            
+
             if(i == opcion)
                 attron(A_REVERSE);
             
             ImprimirCentrado((LINES/2)+i, menu[i]);
             attroff(A_REVERSE);
         }
-        
+
         refresh();
 
         tecla = getch();
@@ -1200,12 +1201,12 @@ void ServidorSinConexion(){
     curs_set(0);
         clear();
     int tecla;
-    keypad(stdscr, TRUE); 
+    keypad(stdscr, TRUE);
     if (has_colors()) {
         start_color();
         init_pair(1, COLOR_BLACK, COLOR_MAGENTA);
     }
-    
+
     while (1) {
         bkgd(COLOR_PAIR(1));
         if(conectarServidor()){
@@ -1223,10 +1224,10 @@ void ServidorSinConexion(){
                     endwin();
                     exit(1);
                 default:
-                    break;                
-            
+                    break;
+
         }
-        
+
     }
 
 

@@ -1,6 +1,6 @@
 #ifndef LISTAS_H
 #define LISTAS_H
-#include "utilidades_back.h"
+#include "utilidades.h"
 #undef I
 #undef F
 
@@ -33,7 +33,7 @@ typedef struct {
     float total;
     usuario u;
     //char *fecha; // DD/MM/YYYY HH:MM
-    char  fecha[20]; // DD/MM/YYYY HH:MM
+    char  fecha[20]; //  DD/MM/YYYY HH:MM
 } venta;
 
 typedef struct informacion {
