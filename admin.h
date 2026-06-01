@@ -88,6 +88,7 @@ void cargarVentasPorRango(listaventa lv, int dias);
 
 void menu();
 void iniciarSesion();
+void ServidorSinConexion();
 void MenuPrincipal(char *usuario);
 void AdministrarUsuarios();
 void AdministrarCatalogo();
