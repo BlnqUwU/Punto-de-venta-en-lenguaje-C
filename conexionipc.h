@@ -20,6 +20,7 @@ void limpiarCarrito();
 
 
 int enviarusuario(usuario u, int CRUD, char *nombreUsuario); //lee llaves primarias (usuario correo)
+int enviarCorreo(usuario u, int CRUD);
 
 int solicitarSesion(usuario u);
 usuario obtenerUsuario(usuario u);

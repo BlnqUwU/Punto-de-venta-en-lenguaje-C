@@ -160,7 +160,7 @@ void Carrito(usuario u){
                     elegido= getarticulo(opcion,carrito);
                     curs_set(0);
                     clear();
-                    int col=(COLS/2)-strlen("Cuantas unidades de  desea agregar al carrito?: ")-strlen(elegido.producto);
+                    int col=(COLS/2)-strlen("Cuantas unidades de  desea quitar del carrito?: ")-strlen(elegido.producto);
                     if(col<0)
                         col=0;
                     mvprintw(LINES/2, col, 
@@ -168,7 +168,7 @@ void Carrito(usuario u){
                     mvprintw((LINES/2)+2, (COLS/2)-10, "%c: Agregar",24);
                     mvprintw((LINES/2)+2, (COLS/2)+10, "%c: Quitar",25);
                     mvprintw((LINES/2)+3, (COLS/2), "Salir: esc");
-                    int cantidad=0;
+                    int cantidad=1;
                     //elegir cantidad a quitar del carrito
                     while(!salir){
                         move((LINES/2),col+strlen("Cuantas unidades de  desea quitar del carrito?: ")+strlen(elegido.producto));
@@ -189,10 +189,10 @@ void Carrito(usuario u){
                             case 10:
                                 elegido.cantidad=elegido.cantidad-cantidad;
                                 if(elegido.cantidad==0){ //si se quita toda la cantidad del carrito entonces lo quita del carrito y lo añade al catalogo
-                                    enviararticulo(elegido, 3,1);
+                                    enviararticulo(elegido, 4,1);
                                     articulo devolver = elegido;
                                     devolver.cantidad = obtenerCantidadCatalogo(elegido.producto) + cantidad;
-                                    enviararticulo(elegido, 2,0);
+                                    enviararticulo(devolver, 2,0);
 
                                     
                                     /*borrararticulo(opcion, carritoGlobal);
@@ -202,7 +202,7 @@ void Carrito(usuario u){
                                     enviararticulo(elegido, 2, 1);
                                     articulo devolver2 = elegido;
                                     devolver2.cantidad = obtenerCantidadCatalogo(elegido.producto) + cantidad;
-                                    enviararticulo(elegido, 2,0);
+                                    enviararticulo(devolver2, 2,0);
                                 }
                             
                                 salir=1;
@@ -260,7 +260,7 @@ void Catalogo(usuario u){
         bkgd(COLOR_PAIR(1));
         curs_set(0);
         clear();
-        cat=ObtenerCatalogo();
+        //cat=ObtenerCatalogo();
         int n=cat->NE;
         int salir=0;
         int col=0;
@@ -286,6 +286,7 @@ void Catalogo(usuario u){
         //imprime el catalogo
         for (int i = pos; i < n && (i - pos) < totalamostrar; i++) {
             articulo ac = getarticulo(i, cat);
+            
             int fila = (LINES / 2) - (totalamostrar / 2) + (i - pos);
 
             move(fila, 0);
@@ -345,7 +346,7 @@ void Catalogo(usuario u){
                     mvprintw((LINES/2)+2, (COLS/2)-10, "%c: Agregar",24);
                     mvprintw((LINES/2)+2, (COLS/2)+10, "%c: Quitar",25);
                     mvprintw((LINES/2)+3, (COLS/2), "Salir: esc");
-                    int cantidad=0;
+                    int cantidad=1;
                     //seleccionar cuantos elementos agregar al carrito de compra desde el catalogo
                     while(!salir){
                         move((LINES/2),col+strlen("Cuantas unidades de  desea agregar al carrito?: ")+strlen(elegido.producto));
@@ -370,6 +371,8 @@ void Catalogo(usuario u){
                                 enviararticulo(elegido, 0, 1);
 
                                 salir=1;
+                                liberarlistaarticulo(&cat);
+                                cat=ObtenerCatalogo();
 
                             break;
                             case 27:

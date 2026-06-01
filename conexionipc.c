@@ -24,11 +24,9 @@ static int            shmID4 = -1;
 int conectarServidor() {
     FILE *f = fopen(ARCHIVO_IPC, "a");
     if (f) fclose(f);
-
     key_t keyShm = ftok(ARCHIVO_IPC, 'M');
     key_t keyShm_usr = ftok(ARCHIVO_IPC, 'U');
     key_t keyShm_venta = ftok(ARCHIVO_IPC, 'V');
-    
     key_t keySem = ftok(ARCHIVO_IPC, 'S');
     if (keyShm == -1 || keySem == -1) {
         perror("ftok");
@@ -76,7 +74,7 @@ int conectarServidor() {
 
     // CONTROL
 
-    key_t keyShm_ctrl = ftok(ARCHIVO_IPC, 'C'); //controla la modificacion de los archivos
+    key_t keyShm_ctrl = ftok(ARCHIVO_IPC, 'C');
     shmID4 = shmget(keyShm_ctrl, sizeof(ControlShm), PERMISOS);
     if (shmID4 == -1) {
         perror("shmget");
@@ -196,6 +194,7 @@ listaarticulo ObtenerCatalogo(){
     downSem(semID, SEM_INV);
 
     for (int i = 0; i < Ishm -> totalCatalogo; i++) {
+        if(Ishm->catalogo[i].cantidad>0)
         addarticulo(catalogo -> NE, Ishm -> catalogo[i], catalogo);
     }
 
