@@ -172,6 +172,7 @@ int enviararticulo(articulo p, int CRUD, int BD){
     upSem(semID, SEM_INV);
 
     Cshm -> tipo = 0;
+    Cshm->pid_cliente = getpid();
     upSem(semID, SEM_REQ);
     downSem(semID, SEM_ACK);
 
@@ -199,6 +200,7 @@ listaarticulo ObtenerCatalogo(){
     upSem(semID, SEM_INV);
 
     Cshm -> tipo = 0;
+    Cshm->pid_cliente = getpid();
     upSem(semID, SEM_REQ);
     downSem(semID, SEM_ACK);
 
@@ -244,6 +246,7 @@ void guardarCarrito(char *usr) {
     upSem(semID, SEM_INV);
 
     Cshm->tipo = 3;
+    Cshm->pid_cliente = getpid();
     upSem(semID, SEM_REQ);
     downSem(semID, SEM_ACK);
 }
@@ -259,6 +262,7 @@ void cargarCarrito(char *usr) {
     upSem(semID, SEM_INV);
 
     Cshm->tipo = 3;
+    Cshm->pid_cliente = getpid();
     upSem(semID, SEM_REQ);
     downSem(semID, SEM_ACK);
 
@@ -294,6 +298,7 @@ int enviarusuario(usuario u, int CRUD, char *nombreUsuario){
     upSem(semID, SEM_USR);
 
     Cshm -> tipo = 1;
+    Cshm->pid_cliente = getpid();
     upSem(semID, SEM_REQ);
     downSem(semID, SEM_ACK);
 
@@ -321,6 +326,7 @@ int enviarusuarioAdminIPC(usuario u, int CRUD, char *nombreUsuario){
     upSem(semID, SEM_USR);
 
     Cshm -> tipo = 1;
+    Cshm->pid_cliente = getpid();
     upSem(semID, SEM_REQ);
     downSem(semID, SEM_ACK);
 
@@ -363,6 +369,7 @@ int solicitarSesionAdmins(usuario u){
     upSem(semID, SEM_USR);
 
     Cshm -> tipo = 1;
+    Cshm->pid_cliente = getpid();
     upSem(semID, SEM_REQ);
     downSem(semID, SEM_ACK);
 
@@ -385,6 +392,7 @@ usuario obtenerUsuario(usuario u){
     upSem(semID, SEM_USR);
 
     Cshm -> tipo = 1;
+    Cshm->pid_cliente = getpid();
     upSem(semID, SEM_REQ);
     downSem(semID, SEM_ACK);
 
@@ -408,6 +416,7 @@ usuario obtenerUsuarioAdmin(usuario u){
     upSem(semID, SEM_USR);
 
     Cshm -> tipo = 1;
+    Cshm->pid_cliente = getpid();
     upSem(semID, SEM_REQ);
     downSem(semID, SEM_ACK);
 
@@ -429,6 +438,7 @@ lista ObtenerUsuarios(){
     upSem(semID, SEM_USR);
 
     Cshm -> tipo = 1;
+    Cshm->pid_cliente = getpid();
     upSem(semID, SEM_REQ);
     downSem(semID, SEM_ACK);
 
@@ -458,6 +468,7 @@ lista ObtenerUsuariosAdmin(){
     upSem(semID, SEM_USR);
 
     Cshm -> tipo = 1;
+    Cshm->pid_cliente = getpid();
     upSem(semID, SEM_REQ);
     downSem(semID, SEM_ACK);
 
@@ -487,6 +498,7 @@ listaventa obtenerVentas(int tipo){
     upSem(semID, SEM_VTA);
 
     Cshm -> tipo = 2;
+    Cshm->pid_cliente = getpid();
     upSem(semID, SEM_REQ);
     downSem(semID, SEM_ACK);
 
@@ -512,6 +524,7 @@ void enviarVenta(venta v){
     upSem(semID, SEM_VTA);
 
     Cshm -> tipo = 2;
+    Cshm->pid_cliente = getpid();
     upSem(semID, SEM_REQ);
     downSem(semID, SEM_ACK);
 

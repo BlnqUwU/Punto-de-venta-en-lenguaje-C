@@ -32,7 +32,8 @@ void *atenderPeticion(void *arg) {
     ArgsHilo *args = (ArgsHilo *) arg;
 
     int tipo = args -> Cshm -> tipo;
-    printf("[SERVIDOR] Peticion recibida. Tipo: %d. Atendiendo...\n", tipo);
+    printf("[SERVIDOR] Peticion tipo=%d | PID cliente=%d | Hilo=%lu\n",
+           tipo, args->Cshm->pid_cliente, (unsigned long)pthread_self());
 
     if (tipo == 0) {
         // INVENTARIO

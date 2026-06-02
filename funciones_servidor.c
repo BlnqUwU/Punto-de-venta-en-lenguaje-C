@@ -338,7 +338,7 @@ void CRUDventas(ventaShm *Vshm, int CRUD){
 
         FILE *archivo = fopen(ARCHIVO_VD, "a");
         if (archivo) {
-            fprintf(archivo, "%s,%.2f,%s,",
+            fprintf(archivo, "%s,%.2f,%s,\n",
                     Vshm->v.u.usr, Vshm->v.total, fecha);
 
             fclose(archivo);

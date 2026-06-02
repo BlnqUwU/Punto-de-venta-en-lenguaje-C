@@ -26,7 +26,8 @@
 // ──────────────────────────────────────────
 
 typedef struct {
-    int tipo; // Inventario = 0, Usuario = 1, Venta = 2
+    int tipo; // Inventario = 0, Usuario = 1, Venta = 2, Carrito = 3
+    pid_t pid_cliente; // PID del proceso cliente
 } ControlShm;
 
 
