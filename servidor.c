@@ -40,7 +40,33 @@ void *atenderPeticion(void *arg) {
         CRUDcatalogo(args -> Ishm, args->Ishm->CRUD, 0);
     } else if (tipo == 1) {
         //USUARIOS
-        CRUDusuario(args->Ushm, args->Ushm->CRUD);
+
+        usuarioShm *UshPriv = NULL;
+        int shmPrivID = shmget(args->Cshm->key_privada, sizeof(usuarioShm), PERMISOS);
+        if (shmPrivID != -1) {
+            UshPriv = (usuarioShm *) shmat(shmPrivID, NULL, 0);
+            if (UshPriv == (void *) -1) UshPriv = NULL;
+        }
+        if (UshPriv) {
+            // copiar totales del Ushm global para que el CRUD pueda buscar
+            UshPriv->totalUsuarios = args->Ushm->totalUsuarios;
+            UshPriv->totalAdmins   = args->Ushm->totalAdmins;
+            memcpy(UshPriv->usuarios, args->Ushm->usuarios, sizeof(usuario) * args->Ushm->totalUsuarios);
+            memcpy(UshPriv->admins,   args->Ushm->admins,   sizeof(usuario) * args->Ushm->totalAdmins);
+            CRUDusuario(UshPriv, UshPriv->CRUD);
+            // si hubo cambios en el arreglo, propagar al Ushm global
+            if (UshPriv->CRUD == 0 || UshPriv->CRUD == 2 || UshPriv->CRUD == 3) {
+                args->Ushm->totalUsuarios = UshPriv->totalUsuarios;
+                args->Ushm->totalAdmins   = UshPriv->totalAdmins;
+                memcpy(args->Ushm->usuarios, UshPriv->usuarios, sizeof(usuario) * UshPriv->totalUsuarios);
+                memcpy(args->Ushm->admins,   UshPriv->admins,   sizeof(usuario) * UshPriv->totalAdmins);
+            }
+            shmdt(UshPriv);
+        } else {
+            // shm publica si no se pudo conectar a la privada
+            CRUDusuario(args->Ushm, args->Ushm->CRUD);
+        }
+
     } else if (tipo == 2) {
         // VENTAS
         CRUDventas(args -> Vshm, args->Vshm->CRUD);
