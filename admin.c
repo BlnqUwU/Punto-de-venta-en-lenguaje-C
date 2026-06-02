@@ -374,6 +374,7 @@ void EditarUsuario(usuario user){
                                 mvprintw(3, 10, "Cambios registrados.");
                                 getch();
                                 clear();
+                                opcion=0;
                                 return;
                             }else {
                                 mvprintw(3, 10, "Cambio fallido.");
@@ -386,8 +387,10 @@ void EditarUsuario(usuario user){
                         curs_set(0);
                         clear();
                         if (enviarusuario(user, 3, NULL) == 1) { //mandar registro a servidor (funcion en funciones_cliente)
+                            
                             mvprintw(3, 10, "Cambios registrados.");
                             getch();
+                            
                             clear();
                             return;
                         }else {
@@ -920,6 +923,8 @@ void AdministrarUsuarios(){
                 }else{//cualquier usuario seleccionado
                     elegido=get(opcion, usuarios);
                     EditarUsuario(elegido.u);
+                    usuarios=ObtenerUsuarios();
+                    opcion=0;
                 }
             break;
 

@@ -215,7 +215,7 @@ void Carrito(usuario u){
                             case 27:// se preciono la tecla esc
                                 salir=1;
                                 endwin();
-                            return;
+                            break;
                         }
                     }
                 }
@@ -384,6 +384,7 @@ void Catalogo(usuario u){
                             case 27:
                                 salir=1;
                             liberarlistaarticulo(&cat);
+                            cat=ObtenerCatalogo();
                                 endwin();
                             break;
                         }
