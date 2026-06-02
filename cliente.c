@@ -171,9 +171,8 @@ void Carrito(usuario u){
                         col=0;
                     mvprintw(LINES/2, col,
                             "Cuantas unidades de %s desea quitar del carrito?: ", elegido.producto);
-                    mvprintw((LINES/2)+2, (COLS/2)-10, "%c: Agregar",24);
-                    mvprintw((LINES/2)+2, (COLS/2)+10, "%c: Quitar",25);
-                    mvprintw((LINES/2)+3, (COLS/2), "Salir: esc");
+                    ImprimirCentrado((LINES/2)+2, "Flecha arriba: Agregar         Flecha abajo:Quitar");
+                    ImprimirCentrado((LINES/2)+3, "Salir: esc");
                     int cantidad=1;
                     //elegir cantidad a quitar del carrito
                     while(!salir){
@@ -214,7 +213,7 @@ void Carrito(usuario u){
                                 salir=1;
                             break;
                             case 27:// se preciono la tecla esc
-
+                                salir=1;
                                 endwin();
                             return;
                         }
@@ -351,9 +350,8 @@ void Catalogo(usuario u){
                         col=0;
                     mvprintw(LINES/2, col,
                             "Cuantas unidades de %s desea agregar al carrito?: ", elegido.producto);
-                    mvprintw((LINES/2)+2, (COLS/2)-10, "%c: Agregar",24);
-                    mvprintw((LINES/2)+2, (COLS/2)+10, "%c: Quitar",25);
-                    mvprintw((LINES/2)+3, (COLS/2), "Salir: esc");
+                    ImprimirCentrado((LINES/2)+2, "Flecha arriba: Agregar         Flecha abajo:Quitar");
+                    ImprimirCentrado((LINES/2)+3, "Salir: esc");
                     int cantidad=1;
                     //seleccionar cuantos elementos agregar al carrito de compra desde el catalogo
                     while(!salir){
@@ -493,7 +491,7 @@ int Perfil(usuario u){
             if (ver[i] == 1) {
                 move((LINES / 2) + 11 + pos, 0);
                 clrtoeol();
-                ImprimirCentrado((LINES / 2) + 11 + pos, mensajes[i]);
+                ImprimirCentrado((LINES / 2) + 1+(LINES/4) + pos, mensajes[i]);
                 pos++; 
             }
         }
