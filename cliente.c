@@ -5,6 +5,22 @@
 #include <ncurses.h>
 #include <string.h>
 
+int checarservidor(){
+    if (!conectarServidor()) {
+            ServidorSinConexion();
+        }
+        if (has_colors()) {
+            start_color();
+            init_pair(1, COLOR_BLACK, COLOR_CYAN);
+        }
+        bkgd(COLOR_PAIR(1));
+        curs_set(0);
+        clear();
+        int volver=1;
+        return volver;
+        
+}
+
 void Carrito(usuario u){
     int opcion = 0;
     int tecla,tecla2;
@@ -135,10 +151,12 @@ void Carrito(usuario u){
 
             case 10: // ENTER
                 if(opcion==n+1){ //salir seleccionado
+                    checarservidor();
                     guardarCarrito(u.usr);
                     liberarlistaarticulo(&carrito);
                     return;
                 }else if(opcion==n){ //pagar carrito seleccionado
+                    checarservidor();
                     curs_set(0);
                     clear();
 
@@ -163,6 +181,7 @@ void Carrito(usuario u){
                     }
                     
                 }else{ //cualquier elemento del carrito elegido
+                    checarservidor();
                     elegido= getarticulo(opcion,carrito);
                     curs_set(0);
                     clear();
@@ -194,6 +213,7 @@ void Carrito(usuario u){
                             case 10:
                                 elegido.cantidad=elegido.cantidad-cantidad;
                                 if(elegido.cantidad==0){ //si se quita toda la cantidad del carrito entonces lo quita del carrito y lo añade al catalogo
+                                    checarservidor();
                                     enviararticulo(elegido, 3,1);
                                     articulo devolver = elegido;
                                     devolver.cantidad = obtenerCantidadCatalogo(elegido.producto) + cantidad;
@@ -204,6 +224,7 @@ void Carrito(usuario u){
                                     addarticulo(opcion,elegido,cat);
                                     devolverExistencias(elegido.producto, cantidad); // ← falta*/
                                 }else { 
+                                    checarservidor();
                                     enviararticulo(elegido, 2, 1);
                                     articulo devolver2 = elegido;
                                     devolver2.cantidad = obtenerCantidadCatalogo(elegido.producto) + cantidad;
@@ -213,6 +234,7 @@ void Carrito(usuario u){
                                 salir=1;
                             break;
                             case 27:// se preciono la tecla esc
+                                checarservidor();
                                 salir=1;
                                 endwin();
                             break;
@@ -338,10 +360,12 @@ void Catalogo(usuario u){
 
             case 10: // ENTER
                 if(opcion==n){//salir seleccionado
+                    checarservidor();
                     guardarCarrito(u.usr);
                     liberarlistaarticulo(&cat);
                     return;
                 }else{//cualquier elemento del catalogo seleccionado
+                    checarservidor();
                     elegido= getarticulo(opcion,cat);
                     curs_set(0);
                     clear();
@@ -408,6 +432,7 @@ int Perfil(usuario u){
     int tecla;
     int ver[5]={0,0,0,0,0};
     int ne = sizeof(ver)/sizeof(ver[0]);
+    int volver;
     char *menu[] = {
         "Nombre:",
         "Apellido:",
@@ -513,6 +538,15 @@ int Perfil(usuario u){
                 break;
 
             case 10: // ENTER
+            volver=0;
+            if (!conectarServidor()) {
+            ServidorSinConexion();
+            volver=1;
+        }
+        if(volver){
+            break;
+        }
+        
                 curs_set(1);
                 switch (opcion) {
                     case 0://nombre elegido, guarda el nombre que se ingreso si es que es valido
@@ -670,12 +704,15 @@ void MenuPrincipal(usuario u){
 
                 switch (opcion) {
                     case 0:
+                    checarservidor();
                         Catalogo(u);
                         break;
                     case 1:
+                    checarservidor();
                         Carrito(u);
                         break;
                     case 2:
+                    checarservidor();
                         if (Perfil(u)==1) //si hubo cambios en el perfil y fueron guardados correctamente entonces regresa al inicio de sesion
                             return;
                         else//si no entonces regresa a esta ventana
@@ -707,6 +744,7 @@ void registrar() {
     int cor=0;
     int us=0;
     int pas=0;
+    int volver=0;
     char aux0[50],aux1[50];
     char *menu[] = {
         "Nombre:",
@@ -824,6 +862,14 @@ void registrar() {
                 break;
 
             case 10: // ENTER
+            volver=0;
+            if (!conectarServidor()) {
+            ServidorSinConexion();
+            volver=1;
+        }
+        if(volver){
+            break;
+        }
             curs_set(1);
                 switch (opcion) {
                     case 0://nombre seleccionado, sin restriccion
