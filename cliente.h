@@ -13,6 +13,7 @@
 // VERIFICACIONES INTERNAS
 // ──────────────────────────────────────────
 
+int checarservidor();
 int VerificarCorreo(char *correo);
 int ComprobarPassword(char *pass);
 int BuscarCorreo(char *correo);

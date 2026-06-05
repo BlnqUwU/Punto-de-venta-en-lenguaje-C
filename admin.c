@@ -16,6 +16,7 @@ void AgregarProducto(){
     int opcion = 0;
     int tecla;
     int col= 0;
+    int volver=0;
     int ver[4]={0,0,0,0};
     int ne = sizeof(ver)/sizeof(ver[0]);
     char aux0[50],aux1[50],aux2[100];
@@ -107,6 +108,15 @@ void AgregarProducto(){
                 break;
 
             case 10: // ENTER
+            volver=0;
+            if (!conectarServidor()) {
+            ServidorSinConexion();
+            volver=1;
+        }
+        if(volver){
+            break;
+        }
+
             curs_set(1);
                 switch (opcion) {
                     case 0://nombre seleccionado, sin restriccion
@@ -117,8 +127,7 @@ void AgregarProducto(){
                     strcpy(aux.producto, aux2);
                         if(BuscarProducto(aux2)||strcmp(aux2, "")==0||strcmp(aux2, " ")==0) {
                             ver[0]=1;
-                        }
-                    else{
+                        }else{
                         strcpy(producto.producto, aux2);
                         ver[0]=0;
                     }
@@ -188,6 +197,7 @@ void EditarUsuario(usuario user){
     int col= 0;
     int cor=0;
     int us=0;
+    int volver=0;
     char aux0[50],aux1[50];
     char *usr[]={user.usr};
     char *menu[] = {
@@ -287,6 +297,14 @@ void EditarUsuario(usuario user){
                 break;
 
             case 10: // ENTER
+            volver=0;
+            if (!conectarServidor()) {
+            ServidorSinConexion();
+            volver=1;
+        }
+        if(volver){
+            break;
+        }
             curs_set(1);
                 switch (opcion) {
                     case 0://nombre seleccionado, sin restriccion
@@ -598,7 +616,7 @@ void GenerarReportes(){
                 break;
 
             case 10: // ENTER
-
+            checarservidor();
                 switch (opcion) {
                     case 0://reporte diario
                         ventadiaria=obtenerVentas(0);
@@ -740,6 +758,7 @@ void AdministrarCatalogo(){
                 break;
 
             case 10: // ENTER
+            checarservidor();
                 if(opcion==n+1){//salir seleccionado
                     liberarlistaarticulo(&cat);
                     return;
@@ -917,6 +936,7 @@ void AdministrarUsuarios(){
                 break;
 
             case 10: // ENTER
+            checarservidor();
                 if(opcion==n){//salir seleccionado
                     liberarlista(&usuarios);
                     return;
@@ -996,6 +1016,7 @@ void MenuPrincipal(char *usuario){
                 break;
 
             case 10: // ENTER
+            checarservidor();
 
                 switch (opcion) {
                     case 0:
@@ -1032,6 +1053,7 @@ void iniciarSesion() {
 
     int opcion = 0;
     int tecla;
+    int volver=0;
 
     char *menu[] = {
         "Usuario:",
@@ -1099,6 +1121,14 @@ void iniciarSesion() {
                 break;
 
             case 10: // ENTER
+            volver=0;
+            if (!conectarServidor()) {
+            ServidorSinConexion();
+            volver=1;
+        }
+        if(volver){
+            break;
+        }
             curs_set(1);
                 switch (opcion) {
                     case 0://leer usuario
@@ -1226,6 +1256,7 @@ void menu() {
             case 10: // ENTER
 
                 if(opcion == 0) {
+                    checarservidor();
                     iniciarSesion();
                     break;
                 }
@@ -1285,7 +1316,6 @@ int main() {
     if (conectarServidor() == 0) {
         ServidorSinConexion();
     }
-    crearAdminSiNoExiste();
     menu();
     desconectarServidor();
     return 0;

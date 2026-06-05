@@ -2,7 +2,7 @@
 #include "listas.h"
 #include "conexionipc.h"
 
-#define ARCHIVO_ADMINS "admins.txt"
+#define ARCHIVO_ADMINS "admins.dat"
 
 // ──────────────────────────────────────────
 // LOGIN ADMIN — 5 CAMPOS
@@ -32,7 +32,7 @@ int solicitarSesionAdmin(usuario a) {
     return solicitarSesionAdmins(a);
 }
 
-void crearAdminSiNoExiste() {
+/*void crearAdminSiNoExiste() {
     if (buscarAdmin("admin") == 0) {
         usuario a;
         char pass_plano[] = "admin";
@@ -42,10 +42,9 @@ void crearAdminSiNoExiste() {
         strcpy(a.usr,      "admin");
         hash(pass_plano, a.pass);
         registrarAdmin(a);
-        printf("[SERVIDOR] Admin creado. usr: admin | pass: admin\n");
 
     }
-}
+}*/
 
 // ──────────────────────────────────────────
 // SESION USUARIO
@@ -59,7 +58,21 @@ int SolicitarSesion(usuario a) {
 // ──────────────────────────────────────────
 // UI
 // ──────────────────────────────────────────
-
+int checarservidor(){
+    if (!conectarServidor()) {
+            ServidorSinConexion();
+        }
+        if (has_colors()) {
+            start_color();
+            init_pair(1, COLOR_BLACK, COLOR_CYAN);
+        }
+        bkgd(COLOR_PAIR(1));
+        curs_set(0);
+        clear();
+        int volver=1;
+        return volver;
+        
+}
 
 
 // ──────────────────────────────────────────

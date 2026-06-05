@@ -227,7 +227,10 @@ int main() {
         printf("[SERVIDOR] Admins cargados: %d.\n", Ushm->totalAdmins);
     } else {
         // crear admin por defecto con hash de "admin"
-        usuario a;
+        FILE *admin = fopen("admins.dat", "r");
+        if (!admin){
+            FILE *admin=fopen("admins.dat", "a");
+            usuario a;
         char pass_plano[] = "admin";
         strcpy(a.nombre, "Admin");
         strcpy(a.apellido, "Sistema");
@@ -243,6 +246,8 @@ int main() {
         }
         printf("[SERVIDOR] Admin por defecto creado. usr: admin | pass: admin\n");
     }
+        }
+        
 
 
 

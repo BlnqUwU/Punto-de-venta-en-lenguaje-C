@@ -54,7 +54,8 @@ typedef articulo * producto;
 // VERIFICACIONES INTERNAS
 // ──────────────────────────────────────────
 
-void crearAdminSiNoExiste();
+int checarservidor();
+//void crearAdminSiNoExiste();
 int VerificarCorreo(char *correo);
 
 // ──────────────────────────────────────────

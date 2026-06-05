@@ -5,21 +5,7 @@
 #include <ncurses.h>
 #include <string.h>
 
-int checarservidor(){
-    if (!conectarServidor()) {
-            ServidorSinConexion();
-        }
-        if (has_colors()) {
-            start_color();
-            init_pair(1, COLOR_BLACK, COLOR_CYAN);
-        }
-        bkgd(COLOR_PAIR(1));
-        curs_set(0);
-        clear();
-        int volver=1;
-        return volver;
-        
-}
+
 
 void Carrito(usuario u){
     int opcion = 0;

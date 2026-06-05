@@ -2,6 +2,22 @@
 #include "listas.h"
 #include "conexionipc.h"
 
+int checarservidor(){
+    if (!conectarServidor()) {
+            ServidorSinConexion();
+        }
+        if (has_colors()) {
+            start_color();
+            init_pair(1, COLOR_BLACK, COLOR_CYAN);
+        }
+        bkgd(COLOR_PAIR(1));
+        curs_set(0);
+        clear();
+        int volver=1;
+        return volver;
+        
+}
+
 int VerificarCorreo(char *correo){
     for(int i=0; correo[i] != '\0'; i++){ //explora toda la cadena de correo
         if(correo[i]== '@'){ //verifica que exista un @ primero
