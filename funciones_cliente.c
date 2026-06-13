@@ -19,16 +19,25 @@ int checarservidor(){
 }
 
 int VerificarCorreo(char *correo){
-    for(int i=0; correo[i] != '\0'; i++){ //explora toda la cadena de correo
-        if(correo[i]== '@'){ //verifica que exista un @ primero
-            for(int j=i; correo[j] != '\0'; j++){ //verifica el resto de la cadena
-                if(correo[j]=='.'){ //verifica que exista un . despues del arroba
-                return 1; //si existe retorna 1 y termina
-                }
-            }
+    int len = 0;
+    int posicion_arroba = -1;
+    int posicion_punto = -1;
+
+    while (correo[len] != '\0') {
+        if (correo[len] == '@') {
+            posicion_arroba = len;
+        } else if (correo[len] == '.') {
+            posicion_punto = len;
         }
+        len++;
     }
-    return 0; //si no existe @ ni . entonces retorna 0 y termina
+    
+    if (posicion_arroba > 0 && posicion_punto > (posicion_arroba + 1) && posicion_punto < (len - 1)) {
+        return 1; 
+        // '@' debe estar seguido por al menos un carácter antes de '.' y '.' no puede ser el último carácter
+    }
+
+    return 0;
 }
 
 int BuscarCorreo(char *correo){
