@@ -53,7 +53,7 @@ void Carrito(usuario u){
         int salir=0;
         float totalpagar=0;
         
-        ImprimirCentrado(5, "Punto de venta");
+        ImprimirCentrado(5, "Punto de venta: El Pollo Loco");
         ImprimirCentrado(6, "Selecciona una opcion");
 
         mvprintw(8, (COLS/8)-strlen("producto")/2, "PRODUCTO");
@@ -279,7 +279,7 @@ void Catalogo(usuario u){
         int salir=0;
         int col=0;
 
-        ImprimirCentrado(5, "Punto de venta");
+        ImprimirCentrado(5, "Punto de venta: El Pollo Loco");
         ImprimirCentrado(6, "Selecciona una opcion");
 
         mvprintw(8, (COLS/8)-strlen("producto")/2, "PRODUCTO");
@@ -1182,7 +1182,7 @@ void menu() {
             init_pair(1, COLOR_BLACK, COLOR_CYAN);
         }
         bkgd(COLOR_PAIR(1));
-        ImprimirCentrado((LINES/2) -3, "Punto de venta");
+        ImprimirCentrado((LINES/2) -3, "Punto de venta: El Pollo Loco");
         ImprimirCentrado((LINES/2) -2, "Selecciona una opcion");
 
         //imprime las opciones del menu
