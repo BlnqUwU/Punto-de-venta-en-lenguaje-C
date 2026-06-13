@@ -32,14 +32,41 @@ void *atenderPeticion(void *arg) {
     ArgsHilo *args = (ArgsHilo *) arg;
 
     int tipo = args -> Cshm -> tipo;
-    printf("[SERVIDOR] Peticion recibida. Tipo: %d. Atendiendo...\n", tipo);
+    printf("[SERVIDOR] Peticion tipo=%d | PID cliente=%d | Hilo=%lu\n",
+           tipo, args->Cshm->pid_cliente, (unsigned long)pthread_self());
 
     if (tipo == 0) {
         // INVENTARIO
         CRUDcatalogo(args -> Ishm, args->Ishm->CRUD, 0);
     } else if (tipo == 1) {
         //USUARIOS
-        CRUDusuario(args->Ushm, args->Ushm->CRUD);
+
+        usuarioShm *UshPriv = NULL;
+        int shmPrivID = shmget(args->Cshm->key_privada, sizeof(usuarioShm), PERMISOS);
+        if (shmPrivID != -1) {
+            UshPriv = (usuarioShm *) shmat(shmPrivID, NULL, 0);
+            if (UshPriv == (void *) -1) UshPriv = NULL;
+        }
+        if (UshPriv) {
+            // copiar totales del Ushm global para que el CRUD pueda buscar
+            UshPriv->totalUsuarios = args->Ushm->totalUsuarios;
+            UshPriv->totalAdmins   = args->Ushm->totalAdmins;
+            memcpy(UshPriv->usuarios, args->Ushm->usuarios, sizeof(usuario) * args->Ushm->totalUsuarios);
+            memcpy(UshPriv->admins,   args->Ushm->admins,   sizeof(usuario) * args->Ushm->totalAdmins);
+            CRUDusuario(UshPriv, UshPriv->CRUD);
+            // si hubo cambios en el arreglo, propagar al Ushm global
+            if (UshPriv->CRUD == 0 || UshPriv->CRUD == 2 || UshPriv->CRUD == 3) {
+                args->Ushm->totalUsuarios = UshPriv->totalUsuarios;
+                args->Ushm->totalAdmins   = UshPriv->totalAdmins;
+                memcpy(args->Ushm->usuarios, UshPriv->usuarios, sizeof(usuario) * UshPriv->totalUsuarios);
+                memcpy(args->Ushm->admins,   UshPriv->admins,   sizeof(usuario) * UshPriv->totalAdmins);
+            }
+            shmdt(UshPriv);
+        } else {
+            // shm publica si no se pudo conectar a la privada
+            CRUDusuario(args->Ushm, args->Ushm->CRUD);
+        }
+
     } else if (tipo == 2) {
         // VENTAS
         CRUDventas(args -> Vshm, args->Vshm->CRUD);
@@ -183,6 +210,45 @@ int main() {
     } else {
         printf("[SERVIDOR] Sin usuarios previos.\n");
     }
+
+    // cargar admins a Ushm->admins[]
+    FILE *fAdm = fopen("admins.dat", "r");
+    if (fAdm) {
+        char lineaAdm[300];
+        Ushm->totalAdmins = 0;
+        while (fgets(lineaAdm, sizeof(lineaAdm), fAdm) && Ushm->totalAdmins < MAX_ADMINS) {
+            usuario a;
+            sscanf(lineaAdm, "%[^,],%[^,],%[^,],%[^,],%[^,\n]",
+                   a.nombre, a.apellido, a.correo, a.usr, a.pass);
+            Ushm->admins[Ushm->totalAdmins] = a;
+            Ushm->totalAdmins++;
+        }
+        fclose(fAdm);
+        printf("[SERVIDOR] Admins cargados: %d.\n", Ushm->totalAdmins);
+    } else {
+        // crear admin por defecto con hash de "admin"
+        FILE *admin = fopen("admins.dat", "r");
+        if (!admin){
+            FILE *admin=fopen("admins.dat", "a");
+            usuario a;
+        char pass_plano[] = "admin";
+        strcpy(a.nombre, "Admin");
+        strcpy(a.apellido, "Sistema");
+        strcpy(a.correo, "admin@sistema.com");
+        strcpy(a.usr, "admin");
+        hash(pass_plano, a.pass);
+        Ushm->admins[0] = a;
+        Ushm->totalAdmins = 1;
+        FILE *fNew = fopen("admins.dat", "w");
+        if (fNew) {
+            fprintf(fNew, "%s,%s,%s,%s,%s,\n", a.nombre, a.apellido, a.correo, a.usr, a.pass);
+            fclose(fNew);
+        }
+        printf("[SERVIDOR] Admin por defecto creado. usr: admin | pass: admin\n");
+    }
+        }
+        
+
 
 
     // CREAR SEMAFOROS

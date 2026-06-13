@@ -2,6 +2,7 @@
 #include "conexionipc.h"
 #include "listas.h"
 #include "memoria_compartida.h"
+#include <ncurses.h>
 #include <string.h>
 
 void AgregarProducto(){
@@ -15,6 +16,7 @@ void AgregarProducto(){
     int opcion = 0;
     int tecla;
     int col= 0;
+    int volver=0;
     int ver[4]={0,0,0,0};
     int ne = sizeof(ver)/sizeof(ver[0]);
     char aux0[50],aux1[50],aux2[100];
@@ -53,7 +55,7 @@ void AgregarProducto(){
         curs_set(0);
         clear();
 
-        ImprimirCentrado((LINES/2) -3, "Registrar un usuario");
+        ImprimirCentrado((LINES/2) -3, "Agregar un producto");
         //imprime las opciones del menu
         for(int i = 0; i < n; i++) {
             if(i == opcion)
@@ -84,13 +86,12 @@ void AgregarProducto(){
         //imprime mensajes de error si es que usuario ingreso datos invalidos en la iteracion anterior
         for (int i = 0; i < ne; i++) {
             if (ver[i] == 1) {
-                move((LINES / 2) + 11 + pos, 0);
+                move((LINES / 2) +(LINES/4) + pos+2, 0);
                 clrtoeol();
-                ImprimirCentrado((LINES / 2) + 11 + pos, mensajes[i]);
-                pos++;
+                ImprimirCentrado((LINES / 2) + (LINES/4) + pos+2, mensajes[i]);
+                pos++; 
             }
         }
-
         refresh();
 
         tecla = getch();
@@ -107,6 +108,15 @@ void AgregarProducto(){
                 break;
 
             case 10: // ENTER
+            volver=0;
+            if (!conectarServidor()) {
+            ServidorSinConexion();
+            volver=1;
+        }
+        if(volver){
+            break;
+        }
+
             curs_set(1);
                 switch (opcion) {
                     case 0://nombre seleccionado, sin restriccion
@@ -115,9 +125,9 @@ void AgregarProducto(){
                     echo();
                     getstr (aux2);
                     strcpy(aux.producto, aux2);
-                    if(enviararticulo(aux,1,0)||strcmp(aux2, "")==0||strcmp(aux2, " ")==0)
-                        ver[0]=1;
-                    else{
+                        if(BuscarProducto(aux2)||strcmp(aux2, "")==0||strcmp(aux2, " ")==0) {
+                            ver[0]=1;
+                        }else{
                         strcpy(producto.producto, aux2);
                         ver[0]=0;
                     }
@@ -187,6 +197,7 @@ void EditarUsuario(usuario user){
     int col= 0;
     int cor=0;
     int us=0;
+    int volver=0;
     char aux0[50],aux1[50];
     char *usr[]={user.usr};
     char *menu[] = {
@@ -246,27 +257,27 @@ void EditarUsuario(usuario user){
         clrtoeol();
         //imprime mensajes de error si el usuario ingreso datos invalidos en la iteracion anterior
         if(cor==1){
-
-            ImprimirCentrado((LINES/2)+11, "Correo Invalido");
+            
+            ImprimirCentrado((LINES/2)+(LINES/4)+3, "Correo Invalido");
         }
         else if (cor==2){
-            mvprintw((LINES/2)+11, (((COLS-strlen("El correo  ya esta en uso")-strlen(aux0))/2)), "El Correo %s ya esta en uso", aux0);
+            mvprintw((LINES/2)+(LINES/4)+3, (((COLS-strlen("El correo  ya esta en uso")-strlen(aux0))/2)), "El Correo %s ya esta en uso", aux0);
         }
-
+            
         col= (COLS - strlen(aux1)-strlen("El usuario  ya existe")) / 2;
         if(col<0)
             col=0;
-        if(us==1){
+        if(us==1){  
             if(cor!=0){
-                move((LINES/2)+12, 0);
+                move((LINES/2)+(LINES/4)+4, 0);
                 clrtoeol();
-                mvprintw((LINES/2)+12, col, "El usuario %s ya existe", aux1);
+                mvprintw((LINES/2)+(LINES/4)+4, col, "El usuario %s ya existe", aux1);
             } else{
-                move((LINES/2)+11,col);
-                clrtoeol();
-                mvprintw((LINES/2)+11, col, "El usuario %s ya existe", aux1);
+                move((LINES/2)+(LINES/4)+3,col);
+                clrtoeol(); 
+                mvprintw((LINES/2)+(LINES/4)+3, col, "El usuario %s ya existe", aux1);
             }
-
+            
         }
 
 
@@ -286,6 +297,14 @@ void EditarUsuario(usuario user){
                 break;
 
             case 10: // ENTER
+            volver=0;
+            if (!conectarServidor()) {
+            ServidorSinConexion();
+            volver=1;
+        }
+        if(volver){
+            break;
+        }
             curs_set(1);
                 switch (opcion) {
                     case 0://nombre seleccionado, sin restriccion
@@ -316,7 +335,7 @@ void EditarUsuario(usuario user){
                         strcpy(user.correo, "");
                         clrtoeol();
                         cor=1;
-                    }else if (enviarusuario((usuario)user,1, NULL) == 1) {
+                    }else if (BuscarCorreo(user.correo) == 1) {
                         move((LINES/2)+11, 0);
                         clrtoeol();
                         move((LINES/2)+12, 0);
@@ -340,7 +359,7 @@ void EditarUsuario(usuario user){
                     clrtoeol();
                     getstr (user.usr);
                     noecho();
-                    if (enviarusuario(user,1, NULL) == 1) {
+                    if (BuscarUsuario(user.usr) == 1) {
                         move((LINES/2)+11, 0);
                         clrtoeol();
                         move((LINES/2)+12, 0);
@@ -373,6 +392,7 @@ void EditarUsuario(usuario user){
                                 mvprintw(3, 10, "Cambios registrados.");
                                 getch();
                                 clear();
+                                opcion=0;
                                 return;
                             }else {
                                 mvprintw(3, 10, "Cambio fallido.");
@@ -385,8 +405,10 @@ void EditarUsuario(usuario user){
                         curs_set(0);
                         clear();
                         if (enviarusuario(user, 3, NULL) == 1) { //mandar registro a servidor (funcion en funciones_cliente)
+                            
                             mvprintw(3, 10, "Cambios registrados.");
                             getch();
+                            
                             clear();
                             return;
                         }else {
@@ -408,128 +430,6 @@ void EditarUsuario(usuario user){
 
         }
     }
-    return;
-}
-
-void VentaDiaria(){
-    int opcion = 0;
-    int tecla,tecla2;
-
-    listaarticulo cat;
-    crearlistaarticulo(&cat);
-    char *menu[] = {
-        "Salir"
-    };
-    int m= sizeof(menu)/sizeof(menu[0]);
-
-    //insertar VENTA DIARIA  de memoria compartida a lista
-
-    cat=ObtenerCatalogo();
-    articulo elegido;
-    set_escdelay(0);
-    noecho();
-    curs_set(0);
-    keypad(stdscr, TRUE);
-
-
-    while(1) {
-        if (!conectarServidor()) {
-            ServidorSinConexion();
-        }
-        if (has_colors()) {
-            start_color();
-            init_pair(1, COLOR_BLACK, COLOR_BLUE);
-        }
-
-        bkgd(COLOR_PAIR(1));
-        curs_set(0);
-        clear();
-        cat=ObtenerCatalogo();
-        int n=cat->NE;
-        int salir=0;
-
-
-        ImprimirCentrado(5, "Punto de venta (administrador)");
-        ImprimirCentrado(6, "Selecciona una opcion");
-
-        mvprintw(8, 50-strlen("producto")/2, "PRODUCTO");
-        mvprintw(8, 150-strlen("VENDIDO")/2, "VENDIDO");
-        refresh();
-
-        char pre[50];
-        char cant[50];
-        int pos = 0;
-        char aux[50];
-        if (opcion < n && opcion >= 30) {
-            pos = opcion - 30 + 1;
-        } else if (opcion < n) {
-            pos = 0;
-        }
-        if(!emptyarticulo(cat)){//verifica si el catalogo esta vacio
-        //imprime el catalogo
-        for (int i = pos; i < n && (i - pos) < 30; i++) {
-
-            articulo ac = getarticulo(i, cat);
-            int fila = (LINES / 2) - (30 / 2) + (i - pos);
-
-            move(fila, 0);
-            clrtoeol();
-
-            if (i == opcion)
-                attron(A_REVERSE);
-
-            sprintf(pre, "%.2f", ac.precio);
-            sprintf(cant, "%d", ac.cantidad);
-            mvprintw(fila, 50 - strlen(ac.producto) / 2, "%s", ac.producto);
-            mvprintw(fila, 149 - strlen(pre) / 2, "$%.2f", ac.precio*ac.cantidad);
-
-            attroff(A_REVERSE);
-        }
-    }
-        refresh();
-        //imprime el boton de salir
-
-        for (int i = 0; i < m; i++) {
-            if(i+n==opcion)
-                attron(A_REVERSE);
-
-            ImprimirCentrado(42+i, menu[i]);
-
-            attroff(A_REVERSE);
-
-        }
-
-        refresh();
-
-
-        tecla = getch();
-
-        switch(tecla) {
-            case KEY_UP:
-                opcion--;
-                if(opcion < 0) opcion = n;
-                break;
-
-            case KEY_DOWN:
-                opcion++;
-                if(opcion >= n+1) opcion = 0;
-                break;
-
-            case 10: // ENTER
-                if(opcion==n){//salir seleccionado
-                    liberarlistaarticulo(&cat);
-                    return;
-                }
-            break;
-
-            case 27:
-            liberarlistaarticulo(&cat);
-            endwin();
-
-            return;
-        }
-    }
-    liberarlistaarticulo(&cat);
     return;
 }
 
@@ -565,28 +465,29 @@ void ventas(listaventa ventas){
         int salir=0;
 
 
-        ImprimirCentrado(5, "Punto de venta (administrador)");
+        ImprimirCentrado(5, "Punto de venta: El pollo Loco (administrador)");
         ImprimirCentrado(6, "Selecciona una opcion");
 
-        mvprintw(8, 50-strlen("FECHA")/2, "FECHA");
-        mvprintw(8, 150-strlen("VENDIDO")/2, "VENDIDO");
+        mvprintw(8, (COLS/4)-strlen("FECHA")/2, "FECHA");
+        mvprintw(8, (int)(COLS/1.34) -strlen("VENDIDO")/2, "VENDIDO");
         refresh();
 
         char pre[50];
         char cant[50];
         int pos = 0;
         char aux[50];
-        if (opcion < n && opcion >= 30) {
-            pos = opcion - 30 + 1;
+        int totalamostrar=(LINES-11)-(LINES/4);
+        if (opcion < n && opcion >= totalamostrar) {
+            pos = opcion - totalamostrar + 1;
         } else if (opcion < n) {
             pos = 0;
         }
         if(!emptyventa(ventas)){
         //imprime el catalogo
-        for (int i = pos; i < n && (i - pos) < 30; i++) {
+        for (int i = pos; i < n && (i - pos) < totalamostrar; i++) {
 
             infoventa ac = getventa(i, ventas);
-            int fila = (LINES / 2) - (30 / 2) + (i - pos);
+            int fila = (LINES / 2) - (totalamostrar / 2) + (i - pos)+1;
 
             move(fila, 0);
             clrtoeol();
@@ -595,8 +496,8 @@ void ventas(listaventa ventas){
                 attron(A_REVERSE);
 
             sprintf(pre, "%.2f", ac.v.total);
-            mvprintw(fila, 50 - strlen(ac.v.fecha) / 2, "%s", ac.v.fecha);
-            mvprintw(fila, 149 - strlen(pre) / 2, "$%.2f", ac.v.total);
+            mvprintw(fila, (COLS/4) - strlen(ac.v.fecha) / 2, "%s", ac.v.fecha);
+            mvprintw(fila,(int)(COLS/1.34) - strlen(pre) / 2, "$%.2f", ac.v.total);
 
             attroff(A_REVERSE);
         }
@@ -608,7 +509,7 @@ void ventas(listaventa ventas){
             if(i+n==opcion)
                 attron(A_REVERSE);
 
-            ImprimirCentrado(42+i, menu[i]);
+            ImprimirCentrado((LINES/2)+(totalamostrar/2)+4+i, menu[i]);
 
             attroff(A_REVERSE);
 
@@ -688,7 +589,7 @@ void GenerarReportes(){
         curs_set(0);
         clear();
 
-        ImprimirCentrado(5, "Punto de venta (administrador)");
+        ImprimirCentrado(5, "Punto de venta: El Pollo Loco (administrador)");
         ImprimirCentrado(6, "Selecciona una opcion");
 
         //imprime las opciones del menu
@@ -715,7 +616,7 @@ void GenerarReportes(){
                 break;
 
             case 10: // ENTER
-
+            checarservidor();
                 switch (opcion) {
                     case 0://reporte diario
                         ventadiaria=obtenerVentas(0);
@@ -760,9 +661,7 @@ void AdministrarCatalogo(){
     };
     int m= sizeof(menu)/sizeof(menu[0]);
 
-    //insertar catalogo de memoria compartida a lista
-
-    //cargarCatalogoAdmin(cat);
+    cat = ObtenerCatalogo();
     articulo elegido;
     set_escdelay(0);
     noecho();
@@ -787,29 +686,30 @@ void AdministrarCatalogo(){
         int salir=0;
 
 
-        ImprimirCentrado(5, "Punto de venta (administrador)");
+        ImprimirCentrado(5, "Punto de venta: El Pollo Loco (administrador)");
         ImprimirCentrado(6, "Selecciona una opcion");
 
-        mvprintw(8, 25-strlen("producto")/2, "PRODUCTO");
-        mvprintw(8, 100-strlen("cantidad disponible")/2, "CANTIDAD DISPONIBLE");
-        mvprintw(8, 175-strlen("precio")/2, "PRECIO");
+        mvprintw(8, (COLS/8)-strlen("producto")/2, "PRODUCTO");
+        mvprintw(8, (COLS/2)-strlen("cantidad disponible")/2, "CANTIDAD DISPONIBLE");
+        mvprintw(8, (int)(COLS/1.2)-strlen("precio")/2, "PRECIO");
         refresh();
 
         char pre[50];
         char cant[50];
         int pos = 0;
         char aux[50];
-        if (opcion < n && opcion >= 30) {
-            pos = opcion - 30 + 1;
+        int totalamostrar=(LINES-11)-(LINES/4);
+        if (opcion < n && opcion >= totalamostrar) {
+            pos = opcion - totalamostrar + 1;
         } else if (opcion < n) {
             pos = 0;
         }
         if(!emptyarticulo(cat)){//verifica si el catalogo esta vacio
         //imprime el catalogo
-        for (int i = pos; i < n && (i - pos) < 30; i++) {
+        for (int i = pos; i < n && (i - pos) < totalamostrar; i++) {
 
             articulo ac = getarticulo(i, cat);
-            int fila = (LINES / 2) - (30 / 2) + (i - pos);
+            int fila = (LINES / 2) - (totalamostrar / 2) + (i - pos)+1;
 
             move(fila, 0);
             clrtoeol();
@@ -819,9 +719,9 @@ void AdministrarCatalogo(){
 
             sprintf(pre, "%.2f", ac.precio);
             sprintf(cant, "%d", ac.cantidad);
-            mvprintw(fila, 25 - strlen(ac.producto) / 2, "%s", ac.producto);
-            mvprintw(fila, 100 - strlen(cant) / 2, "%d", ac.cantidad);
-            mvprintw(fila, 174 - strlen(pre) / 2, "$%.2f", ac.precio);
+            mvprintw(fila, (COLS/8) - strlen(ac.producto) / 2, "%s", ac.producto);
+            mvprintw(fila, (COLS/2) - strlen(cant) / 2, "%d", ac.cantidad);
+            mvprintw(fila, (int)(COLS/1.2) - strlen(pre) / 2, "$%.2f", ac.precio);
 
             attroff(A_REVERSE);
         }
@@ -833,7 +733,7 @@ void AdministrarCatalogo(){
             if(i+n==opcion)
                 attron(A_REVERSE);
 
-            ImprimirCentrado(42+i, menu[i]);
+            ImprimirCentrado((LINES/2)+(totalamostrar/2)+4+i, menu[i]);
 
             attroff(A_REVERSE);
 
@@ -858,11 +758,14 @@ void AdministrarCatalogo(){
                 break;
 
             case 10: // ENTER
+            checarservidor();
                 if(opcion==n+1){//salir seleccionado
                     liberarlistaarticulo(&cat);
                     return;
                 }else if(opcion==n){
                     AgregarProducto();
+                    liberarlistaarticulo(&cat);
+                    cat = ObtenerCatalogo();
                     opcion=0;
                     break;
                 }else{//cualquier elemento del catalogo seleccionado
@@ -874,30 +777,50 @@ void AdministrarCatalogo(){
                         col=0;
                     mvprintw(LINES/2, col,
                             "Cuantas unidades de %s desea quitar o agregar al catalogo?: ", elegido.producto);
-                    move((LINES/2),(COLS/2)+strlen("Cuantas unidades de  desea quitar o agregar al carrito?: ")+strlen(elegido.producto));
-                    clrtoeol();
-                    echo();
+                    ImprimirCentrado((LINES/2)+2, "Flecha arriba: Agregar         Flecha abajo:Quitar");
+                    ImprimirCentrado((LINES/2)+3, "Salir: esc");
                     int cantidad=0;
-                    getstr(aux);
-                    cantidad=atoi(aux);
-                    if((elegido.cantidad+cantidad)<=0){
-                        enviararticulo(elegido, 3, 0);
-                        curs_set(0);
-                        clear();
-                        ImprimirCentrado(LINES/2, "Producto eliminado con exito.");
-                        getch();
-                        return;
-                    }else{
-                        elegido.cantidad += cantidad;
-                        enviararticulo(elegido, 2, 0);
-                        curs_set(0);
-                        clear();
-                        ImprimirCentrado(LINES/2, "Existencias actualizadas con exito.");
-                        getch();
-                        return;
+                    while (!salir) {
+                        move((LINES/2),(COLS/2)+strlen("Cuantas unidades de  desea quitar o agregar al carrito?: ")+strlen(elegido.producto));
+                        clrtoeol();
+                        mvprintw((LINES/2), (col+strlen("Cuantas unidades de  desea quitar o agregar al carrito?: ")+strlen(elegido.producto)) , "%d", cantidad);
+                        tecla2=getch();
+                        switch (tecla2) {
+                            case KEY_UP:
+                                cantidad++;
+                                //if(cantidad > elegido.cantidad) cantidad = 1;
+                            break;
+
+                            case KEY_DOWN:
+                                cantidad--;
+                                //if(cantidad == 0) cantidad = elegido.cantidad;
+                            break;
+                            case 10:
+                                if((elegido.cantidad+cantidad)<=0){
+                                    enviararticulo(elegido, 3, 0);
+                                    curs_set(0);
+                                    clear();
+                                    ImprimirCentrado(LINES/2, "Producto eliminado con exito.");
+                                    getch();
+                                    return;
+                                }else{
+                                    elegido.cantidad += cantidad;
+                                    enviararticulo(elegido, 2, 0);
+                                    curs_set(0);
+                                    clear();
+                                    ImprimirCentrado(LINES/2, "Existencias actualizadas con exito.");
+                                    getch();
+                                        return;
+                                }
+                                salir=1;
+                            break;
+                            case 27:
+                                salir=1;
+                                endwin();
+                            break;
+
+                        }
                     }
-
-
                 }
             break;
 
@@ -948,7 +871,7 @@ void AdministrarUsuarios(){
         int salir=0;
         usuarios=ObtenerUsuarios();
 
-        ImprimirCentrado(5, "Punto de venta");
+        ImprimirCentrado(5, "Punto de venta: El Pollo Loco");
         ImprimirCentrado(6, "Selecciona una opcion");
 
         mvprintw(8, (COLS/8)-strlen("nombre")/2, "Nombre");
@@ -1013,12 +936,15 @@ void AdministrarUsuarios(){
                 break;
 
             case 10: // ENTER
+            checarservidor();
                 if(opcion==n){//salir seleccionado
                     liberarlista(&usuarios);
                     return;
                 }else{//cualquier usuario seleccionado
                     elegido=get(opcion, usuarios);
                     EditarUsuario(elegido.u);
+                    usuarios=ObtenerUsuarios();
+                    opcion=0;
                 }
             break;
 
@@ -1090,6 +1016,7 @@ void MenuPrincipal(char *usuario){
                 break;
 
             case 10: // ENTER
+            checarservidor();
 
                 switch (opcion) {
                     case 0:
@@ -1126,6 +1053,7 @@ void iniciarSesion() {
 
     int opcion = 0;
     int tecla;
+    int volver=0;
 
     char *menu[] = {
         "Usuario:",
@@ -1193,6 +1121,14 @@ void iniciarSesion() {
                 break;
 
             case 10: // ENTER
+            volver=0;
+            if (!conectarServidor()) {
+            ServidorSinConexion();
+            volver=1;
+        }
+        if(volver){
+            break;
+        }
             curs_set(1);
                 switch (opcion) {
                     case 0://leer usuario
@@ -1290,7 +1226,7 @@ void menu() {
         clear();
 
 
-        ImprimirCentrado((LINES/2) -3, "Punto de Venta (Administrador)");
+        ImprimirCentrado((LINES/2) -3, "Punto de Venta: El Pollo Loco (Administrador)");
         ImprimirCentrado((LINES/2) -2, "Selecciona una opcion");
 
         //imprime las opciones del menu
@@ -1320,6 +1256,7 @@ void menu() {
             case 10: // ENTER
 
                 if(opcion == 0) {
+                    checarservidor();
                     iniciarSesion();
                     break;
                 }
@@ -1379,7 +1316,6 @@ int main() {
     if (conectarServidor() == 0) {
         ServidorSinConexion();
     }
-    crearAdminSiNoExiste();
     menu();
     desconectarServidor();
     return 0;

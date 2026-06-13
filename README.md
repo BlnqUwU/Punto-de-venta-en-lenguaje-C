@@ -72,7 +72,7 @@ Ejecuta
 
 -   [@BlnqUwU](https://github.com/BlnqUwU)
 -   [@Pollo1521](https://github.com/Pollo1521)
-
+-   [@xsuik33](https://github.com/xsuik33)
 
 
 

@@ -8,3 +8,6 @@ cliente: cliente.c funciones_cliente.c listas.c conexionipc.c utilidades.c
 
 admin: admin.c funciones_admin.c listas.c conexionipc.c utilidades.c
 	gcc admin.c funciones_admin.c listas.c conexionipc.c utilidades.c -o admin -lncurses
+
+clear:
+	rm cliente admin servidor

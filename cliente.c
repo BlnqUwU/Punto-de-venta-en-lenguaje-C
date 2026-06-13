@@ -5,6 +5,8 @@
 #include <ncurses.h>
 #include <string.h>
 
+
+
 void Carrito(usuario u){
     int opcion = 0;
     int tecla,tecla2;
@@ -51,7 +53,7 @@ void Carrito(usuario u){
         int salir=0;
         float totalpagar=0;
         
-        ImprimirCentrado(5, "Punto de venta");
+        ImprimirCentrado(5, "Punto de venta: El Pollo Loco");
         ImprimirCentrado(6, "Selecciona una opcion");
 
         mvprintw(8, (COLS/8)-strlen("producto")/2, "PRODUCTO");
@@ -135,10 +137,12 @@ void Carrito(usuario u){
 
             case 10: // ENTER
                 if(opcion==n+1){ //salir seleccionado
+                    checarservidor();
                     guardarCarrito(u.usr);
                     liberarlistaarticulo(&carrito);
                     return;
                 }else if(opcion==n){ //pagar carrito seleccionado
+                    checarservidor();
                     curs_set(0);
                     clear();
 
@@ -163,6 +167,7 @@ void Carrito(usuario u){
                     }
                     
                 }else{ //cualquier elemento del carrito elegido
+                    checarservidor();
                     elegido= getarticulo(opcion,carrito);
                     curs_set(0);
                     clear();
@@ -171,9 +176,8 @@ void Carrito(usuario u){
                         col=0;
                     mvprintw(LINES/2, col,
                             "Cuantas unidades de %s desea quitar del carrito?: ", elegido.producto);
-                    mvprintw((LINES/2)+2, (COLS/2)-10, "%c: Agregar",24);
-                    mvprintw((LINES/2)+2, (COLS/2)+10, "%c: Quitar",25);
-                    mvprintw((LINES/2)+3, (COLS/2), "Salir: esc");
+                    ImprimirCentrado((LINES/2)+2, "Flecha arriba: Agregar         Flecha abajo:Quitar");
+                    ImprimirCentrado((LINES/2)+3, "Salir: esc");
                     int cantidad=1;
                     //elegir cantidad a quitar del carrito
                     while(!salir){
@@ -195,6 +199,7 @@ void Carrito(usuario u){
                             case 10:
                                 elegido.cantidad=elegido.cantidad-cantidad;
                                 if(elegido.cantidad==0){ //si se quita toda la cantidad del carrito entonces lo quita del carrito y lo añade al catalogo
+                                    checarservidor();
                                     enviararticulo(elegido, 3,1);
                                     articulo devolver = elegido;
                                     devolver.cantidad = obtenerCantidadCatalogo(elegido.producto) + cantidad;
@@ -205,6 +210,7 @@ void Carrito(usuario u){
                                     addarticulo(opcion,elegido,cat);
                                     devolverExistencias(elegido.producto, cantidad); // ← falta*/
                                 }else { 
+                                    checarservidor();
                                     enviararticulo(elegido, 2, 1);
                                     articulo devolver2 = elegido;
                                     devolver2.cantidad = obtenerCantidadCatalogo(elegido.producto) + cantidad;
@@ -214,9 +220,10 @@ void Carrito(usuario u){
                                 salir=1;
                             break;
                             case 27:// se preciono la tecla esc
-
+                                checarservidor();
+                                salir=1;
                                 endwin();
-                            return;
+                            break;
                         }
                     }
                 }
@@ -272,7 +279,7 @@ void Catalogo(usuario u){
         int salir=0;
         int col=0;
 
-        ImprimirCentrado(5, "Punto de venta");
+        ImprimirCentrado(5, "Punto de venta: El Pollo Loco");
         ImprimirCentrado(6, "Selecciona una opcion");
 
         mvprintw(8, (COLS/8)-strlen("producto")/2, "PRODUCTO");
@@ -339,10 +346,12 @@ void Catalogo(usuario u){
 
             case 10: // ENTER
                 if(opcion==n){//salir seleccionado
+                    checarservidor();
                     guardarCarrito(u.usr);
                     liberarlistaarticulo(&cat);
                     return;
                 }else{//cualquier elemento del catalogo seleccionado
+                    checarservidor();
                     elegido= getarticulo(opcion,cat);
                     curs_set(0);
                     clear();
@@ -351,9 +360,8 @@ void Catalogo(usuario u){
                         col=0;
                     mvprintw(LINES/2, col,
                             "Cuantas unidades de %s desea agregar al carrito?: ", elegido.producto);
-                    mvprintw((LINES/2)+2, (COLS/2)-10, "%c: Agregar",24);
-                    mvprintw((LINES/2)+2, (COLS/2)+10, "%c: Quitar",25);
-                    mvprintw((LINES/2)+3, (COLS/2), "Salir: esc");
+                    ImprimirCentrado((LINES/2)+2, "Flecha arriba: Agregar         Flecha abajo:Quitar");
+                    ImprimirCentrado((LINES/2)+3, "Salir: esc");
                     int cantidad=1;
                     //seleccionar cuantos elementos agregar al carrito de compra desde el catalogo
                     while(!salir){
@@ -386,6 +394,7 @@ void Catalogo(usuario u){
                             case 27:
                                 salir=1;
                             liberarlistaarticulo(&cat);
+                            cat=ObtenerCatalogo();
                                 endwin();
                             break;
                         }
@@ -409,6 +418,7 @@ int Perfil(usuario u){
     int tecla;
     int ver[5]={0,0,0,0,0};
     int ne = sizeof(ver)/sizeof(ver[0]);
+    int volver;
     char *menu[] = {
         "Nombre:",
         "Apellido:",
@@ -493,7 +503,7 @@ int Perfil(usuario u){
             if (ver[i] == 1) {
                 move((LINES / 2) + 11 + pos, 0);
                 clrtoeol();
-                ImprimirCentrado((LINES / 2) + 11 + pos, mensajes[i]);
+                ImprimirCentrado((LINES / 2) + 1+(LINES/4) + pos, mensajes[i]);
                 pos++; 
             }
         }
@@ -514,6 +524,15 @@ int Perfil(usuario u){
                 break;
 
             case 10: // ENTER
+            volver=0;
+            if (!conectarServidor()) {
+            ServidorSinConexion();
+            volver=1;
+        }
+        if(volver){
+            break;
+        }
+        
                 curs_set(1);
                 switch (opcion) {
                     case 0://nombre elegido, guarda el nombre que se ingreso si es que es valido
@@ -671,12 +690,15 @@ void MenuPrincipal(usuario u){
 
                 switch (opcion) {
                     case 0:
+                    checarservidor();
                         Catalogo(u);
                         break;
                     case 1:
+                    checarservidor();
                         Carrito(u);
                         break;
                     case 2:
+                    checarservidor();
                         if (Perfil(u)==1) //si hubo cambios en el perfil y fueron guardados correctamente entonces regresa al inicio de sesion
                             return;
                         else//si no entonces regresa a esta ventana
@@ -708,6 +730,7 @@ void registrar() {
     int cor=0;
     int us=0;
     int pas=0;
+    int volver=0;
     char aux0[50],aux1[50];
     char *menu[] = {
         "Nombre:",
@@ -825,6 +848,14 @@ void registrar() {
                 break;
 
             case 10: // ENTER
+            volver=0;
+            if (!conectarServidor()) {
+            ServidorSinConexion();
+            volver=1;
+        }
+        if(volver){
+            break;
+        }
             curs_set(1);
                 switch (opcion) {
                     case 0://nombre seleccionado, sin restriccion
@@ -1151,7 +1182,7 @@ void menu() {
             init_pair(1, COLOR_BLACK, COLOR_CYAN);
         }
         bkgd(COLOR_PAIR(1));
-        ImprimirCentrado((LINES/2) -3, "Punto de venta");
+        ImprimirCentrado((LINES/2) -3, "Punto de venta: El Pollo Loco");
         ImprimirCentrado((LINES/2) -2, "Selecciona una opcion");
 
         //imprime las opciones del menu

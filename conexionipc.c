@@ -12,6 +12,8 @@
 static InventarioShm *Ishm   = NULL;
 static listaarticulo carritoLocal = NULL;
 static usuarioShm *Ushm   = NULL;
+static usuarioShm *UshPriv   = NULL;
+static int shmIDPriv = -1;
 static ventaShm *Vshm   = NULL;
 static ControlShm *Cshm   = NULL;
 static carritoShm *Kshm   = NULL;
@@ -47,6 +49,21 @@ int conectarServidor() {
         perror("shmat");
         return 0;
     }
+
+    // SHM PRIV
+
+    key_t keyPriv = (key_t)(getpid());
+    shmIDPriv = shmget(keyPriv, sizeof(usuarioShm), IPC_CREAT | IPC_EXCL | PERMISOS);
+    if (shmIDPriv == -1) {
+        // ya existe de una conexion anterior, limpiar y recrear
+        shmIDPriv = shmget(keyPriv, sizeof(usuarioShm), PERMISOS);
+        if (shmIDPriv != -1) shmctl(shmIDPriv, IPC_RMID, 0);
+        shmIDPriv = shmget(keyPriv, sizeof(usuarioShm), IPC_CREAT | PERMISOS);
+    }
+    if (shmIDPriv == -1) { perror("shmget privada"); return 0; }
+    UshPriv = (usuarioShm *) shmat(shmIDPriv, NULL, 0);
+    if (UshPriv == (void *) -1) { perror("shmat privada"); return 0; }
+
 
     //Usuarios
 
@@ -110,6 +127,11 @@ int conectarServidor() {
 void desconectarServidor() {
     if (Ishm) shmdt(Ishm);
     if (Ushm) shmdt(Ushm);
+    if (UshPriv) {
+        shmdt(UshPriv);
+        shmctl(shmIDPriv, IPC_RMID, 0);
+        UshPriv = NULL;
+    }
     if (Vshm) shmdt(Vshm);
     if (Cshm) shmdt(Cshm);
     if (Kshm) shmdt(Kshm);
@@ -172,6 +194,7 @@ int enviararticulo(articulo p, int CRUD, int BD){
     upSem(semID, SEM_INV);
 
     Cshm -> tipo = 0;
+    Cshm->pid_cliente = getpid();
     upSem(semID, SEM_REQ);
     downSem(semID, SEM_ACK);
 
@@ -199,6 +222,7 @@ listaarticulo ObtenerCatalogo(){
     upSem(semID, SEM_INV);
 
     Cshm -> tipo = 0;
+    Cshm->pid_cliente = getpid();
     upSem(semID, SEM_REQ);
     downSem(semID, SEM_ACK);
 
@@ -244,6 +268,7 @@ void guardarCarrito(char *usr) {
     upSem(semID, SEM_INV);
 
     Cshm->tipo = 3;
+    Cshm->pid_cliente = getpid();
     upSem(semID, SEM_REQ);
     downSem(semID, SEM_ACK);
 }
@@ -259,6 +284,7 @@ void cargarCarrito(char *usr) {
     upSem(semID, SEM_INV);
 
     Cshm->tipo = 3;
+    Cshm->pid_cliente = getpid();
     upSem(semID, SEM_REQ);
     downSem(semID, SEM_ACK);
 
@@ -276,91 +302,211 @@ void cargarCarrito(char *usr) {
 int enviarusuario(usuario u, int CRUD, char *nombreUsuario){
     //GUARDA ATRIBUTOS EN SHM DE USUARIO
 
-    if (!Ushm) return 0;
+    if (!UshPriv) return 0;
 
     //SI CRUD==1 DEBE ESPERAR RESPUESTA DE SERVIDOR Y RETORNAR LA VARIABLE
     //REALIZADO
 
     downSem(semID, SEM_USR);
-    Ushm->u         = u;
-    Ushm->CRUD      = CRUD;
-    Ushm->realizado = 0;
+    UshPriv->u         = u;
+    UshPriv->CRUD      = CRUD;
+    UshPriv->realizado = 0;
+    UshPriv -> BD      = 0;
     if (nombreUsuario != NULL) {
-        strncpy(Ushm -> usr_original, nombreUsuario, sizeof(Ushm -> usr_original) - 1);
+        strncpy(UshPriv -> usr_original, nombreUsuario, sizeof(UshPriv -> usr_original) - 1);
     } else {
-        Ushm -> usr_original[0] = '\0';
+        UshPriv -> usr_original[0] = '\0';
     }
     upSem(semID, SEM_USR);
 
     Cshm -> tipo = 1;
+    Cshm->pid_cliente = getpid();
+    Cshm->key_privada = (key_t)(getpid());
     upSem(semID, SEM_REQ);
     downSem(semID, SEM_ACK);
 
-    return Ushm -> realizado;
+    return UshPriv -> realizado;
+}
+
+int enviarusuarioAdminIPC(usuario u, int CRUD, char *nombreUsuario){
+    //GUARDA ATRIBUTOS EN SHM DE Admin
+
+    if (!UshPriv) return 0;
+
+    //SI CRUD==1 DEBE ESPERAR RESPUESTA DE SERVIDOR Y RETORNAR LA VARIABLE
+    //REALIZADO
+
+    downSem(semID, SEM_USR);
+    UshPriv->u         = u;
+    UshPriv->CRUD      = CRUD;
+    UshPriv->realizado = 0;
+    UshPriv -> BD      = 1;
+    if (nombreUsuario != NULL) {
+        strncpy(UshPriv -> usr_original, nombreUsuario, sizeof(UshPriv -> usr_original) - 1);
+    } else {
+        UshPriv -> usr_original[0] = '\0';
+    }
+    upSem(semID, SEM_USR);
+
+    Cshm -> tipo = 1;
+    Cshm->pid_cliente = getpid();
+    Cshm->key_privada = (key_t)(getpid());
+    upSem(semID, SEM_REQ);
+    downSem(semID, SEM_ACK);
+
+    return UshPriv -> realizado;
 }
 
 int solicitarSesion(usuario u){
     //GUARDA USUARIO Y CRUD==1 EN SHM DE USUARIO
 
-    if (!Ushm) return 0;
+    if (!UshPriv) return 0;
 
     //ESPERA RESPUESTA DEL SERVIDOR, RETORNA LA VARIABLE REALIZADO
 
     downSem(semID, SEM_USR);
-    Ushm -> u = u;
-    Ushm -> CRUD = 1;
-    Ushm -> realizado = 0;
+    UshPriv -> u = u;
+    UshPriv -> CRUD = 1;
+    UshPriv -> realizado = 0;
+    UshPriv -> BD      = 0;
     upSem(semID, SEM_USR);
 
     Cshm -> tipo = 1;
+    Cshm->pid_cliente = getpid();
+    Cshm->key_privada = (key_t)(getpid());
     upSem(semID, SEM_REQ);
     downSem(semID, SEM_ACK);
 
-    return Ushm -> realizado;
+    return UshPriv -> realizado;
+}
+
+int solicitarSesionAdmins(usuario u){
+    //GUARDA USUARIO Y CRUD==1 EN SHM DE USUARIO
+
+    if (!UshPriv) return 0;
+
+    //ESPERA RESPUESTA DEL SERVIDOR, RETORNA LA VARIABLE REALIZADO
+
+    downSem(semID, SEM_USR);
+    UshPriv -> u = u;
+    UshPriv -> CRUD = 1;
+    UshPriv -> realizado = 0;
+    UshPriv -> BD = 1;
+    upSem(semID, SEM_USR);
+
+    Cshm -> tipo = 1;
+    Cshm->pid_cliente = getpid();
+    Cshm->key_privada = (key_t)(getpid());
+    upSem(semID, SEM_REQ);
+    downSem(semID, SEM_ACK);
+
+    return UshPriv -> realizado;
 }
 
 usuario obtenerUsuario(usuario u){
 
     usuario vacio = {"","","","",""};
-    if (!Ushm) return vacio;
+    if (!UshPriv) return vacio;
 
     //GUARDA ATRIBUTOS EN SHM Y CRUD==1 DE USUARIO
     //ESPERA RESPUESTA DEL SERVIDOR Y RETORNA EL USUARIO RECIBIDO DEL SERVIDOR
 
     downSem(semID, SEM_USR);
-    Ushm -> u = u;
-    Ushm -> CRUD = 1;
-    Ushm -> realizado = 0;
+    UshPriv -> u = u;
+    UshPriv -> CRUD = 1;
+    UshPriv -> realizado = 0;
+    UshPriv -> BD = 0;
     upSem(semID, SEM_USR);
 
     Cshm -> tipo = 1;
+    Cshm->pid_cliente = getpid();
+    Cshm->key_privada = (key_t)(getpid());
     upSem(semID, SEM_REQ);
     downSem(semID, SEM_ACK);
 
-    if (Ushm -> realizado == 1) return Ushm -> u;
+    if (UshPriv -> realizado == 1) return UshPriv -> u;
+    return vacio;
+}
+
+usuario obtenerUsuarioAdmin(usuario u){
+
+    usuario vacio = {"","","","",""};
+    if (!UshPriv) return vacio;
+
+    //GUARDA ATRIBUTOS EN SHM Y CRUD==1 DE USUARIO
+    //ESPERA RESPUESTA DEL SERVIDOR Y RETORNA EL USUARIO RECIBIDO DEL SERVIDOR
+
+    downSem(semID, SEM_USR);
+    UshPriv -> u = u;
+    UshPriv -> CRUD = 1;
+    UshPriv -> realizado = 0;
+    UshPriv -> BD = 1;
+    upSem(semID, SEM_USR);
+
+    Cshm -> tipo = 1;
+    Cshm->pid_cliente = getpid();
+    Cshm->key_privada = (key_t)(getpid());
+    upSem(semID, SEM_REQ);
+    downSem(semID, SEM_ACK);
+
+    if (UshPriv -> realizado == 1) return UshPriv -> u;
     return vacio;
 }
 
 lista ObtenerUsuarios(){
     lista usuarios;
     crearlista(&usuarios);
-    if (!Ushm) return usuarios;
+    if (!UshPriv) return usuarios;
 
     //GUARDA LOS USUARIOS DE LA MEMORIA COMPARTIDA Y CRUD==1 Y LA RETORNA
 
     downSem(semID, SEM_USR);
-    Ushm->CRUD = 1;
-    Ushm -> realizado = 0;
+    UshPriv->CRUD = 1;
+    UshPriv -> realizado = 0;
+    UshPriv -> BD = 0;
     upSem(semID, SEM_USR);
 
     Cshm -> tipo = 1;
+    Cshm->pid_cliente = getpid();
+    Cshm->key_privada = (key_t)(getpid());
     upSem(semID, SEM_REQ);
     downSem(semID, SEM_ACK);
 
     downSem(semID, SEM_USR);
-    for (int i = 0; i < Ushm -> totalUsuarios; i++) {
+    for (int i = 0; i < UshPriv -> totalUsuarios; i++) {
         info inf;
-        inf.u = Ushm -> usuarios[i];
+        inf.u = UshPriv -> usuarios[i];
+        add(usuarios -> NE, inf, usuarios);
+    }
+
+    upSem(semID, SEM_USR);
+
+    return usuarios;
+}
+
+lista ObtenerUsuariosAdmin(){
+    lista usuarios;
+    crearlista(&usuarios);
+    if (!UshPriv) return usuarios;
+
+    //GUARDA LOS USUARIOS DE LA MEMORIA COMPARTIDA Y CRUD==1 Y LA RETORNA
+
+    downSem(semID, SEM_USR);
+    UshPriv->CRUD = 1;
+    UshPriv -> realizado = 0;
+    UshPriv -> BD = 1;
+    upSem(semID, SEM_USR);
+
+    Cshm -> tipo = 1;
+    Cshm->pid_cliente = getpid();
+    Cshm->key_privada = (key_t)(getpid());
+    upSem(semID, SEM_REQ);
+    downSem(semID, SEM_ACK);
+
+    downSem(semID, SEM_USR);
+    for (int i = 0; i < UshPriv -> totalUsuarios; i++) {
+        info inf;
+        inf.u = UshPriv  -> usuarios[i];
         add(usuarios -> NE, inf, usuarios);
     }
 
@@ -383,6 +529,7 @@ listaventa obtenerVentas(int tipo){
     upSem(semID, SEM_VTA);
 
     Cshm -> tipo = 2;
+    Cshm->pid_cliente = getpid();
     upSem(semID, SEM_REQ);
     downSem(semID, SEM_ACK);
 
@@ -408,6 +555,7 @@ void enviarVenta(venta v){
     upSem(semID, SEM_VTA);
 
     Cshm -> tipo = 2;
+    Cshm->pid_cliente = getpid();
     upSem(semID, SEM_REQ);
     downSem(semID, SEM_ACK);
 
