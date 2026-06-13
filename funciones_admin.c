@@ -114,13 +114,24 @@ int RegistrarProducto(articulo p, char *arch) {
 }
 
 int VerificarCorreo(char *correo) {
-    for (int i = 0; correo[i] != '\0'; i++) {
-        if (correo[i] == '@') {
-            for (int j = i; correo[j] != '\0'; j++) {
-                if (correo[j] == '.') return 1;
-            }
+    int len = 0;
+    int posicion_arroba = -1;
+    int posicion_punto = -1;
+
+    while (correo[len] != '\0') {
+        if (correo[len] == '@') {
+            posicion_arroba = len;
+        } else if (correo[len] == '.') {
+            posicion_punto = len;
         }
+        len++;
     }
+    
+    if (posicion_arroba > 0 && posicion_punto > (posicion_arroba + 1) && posicion_punto < (len - 1)) {
+        return 1; 
+        // '@' debe estar seguido por al menos un carácter antes de '.' y '.' no puede ser el último carácter
+    }
+
     return 0;
 }
 
