@@ -465,7 +465,7 @@ void ventas(listaventa ventas){
         int salir=0;
 
 
-        ImprimirCentrado(5, "Punto de venta (administrador)");
+        ImprimirCentrado(5, "Punto de venta: El pollo Loco (administrador)");
         ImprimirCentrado(6, "Selecciona una opcion");
 
         mvprintw(8, (COLS/4)-strlen("FECHA")/2, "FECHA");
@@ -589,7 +589,7 @@ void GenerarReportes(){
         curs_set(0);
         clear();
 
-        ImprimirCentrado(5, "Punto de venta (administrador)");
+        ImprimirCentrado(5, "Punto de venta: El Pollo Loco (administrador)");
         ImprimirCentrado(6, "Selecciona una opcion");
 
         //imprime las opciones del menu
@@ -686,7 +686,7 @@ void AdministrarCatalogo(){
         int salir=0;
 
 
-        ImprimirCentrado(5, "Punto de venta (administrador)");
+        ImprimirCentrado(5, "Punto de venta: El Pollo Loco (administrador)");
         ImprimirCentrado(6, "Selecciona una opcion");
 
         mvprintw(8, (COLS/8)-strlen("producto")/2, "PRODUCTO");
@@ -871,7 +871,7 @@ void AdministrarUsuarios(){
         int salir=0;
         usuarios=ObtenerUsuarios();
 
-        ImprimirCentrado(5, "Punto de venta");
+        ImprimirCentrado(5, "Punto de venta: El Pollo Loco");
         ImprimirCentrado(6, "Selecciona una opcion");
 
         mvprintw(8, (COLS/8)-strlen("nombre")/2, "Nombre");
@@ -1226,7 +1226,7 @@ void menu() {
         clear();
 
 
-        ImprimirCentrado((LINES/2) -3, "Punto de Venta (Administrador)");
+        ImprimirCentrado((LINES/2) -3, "Punto de Venta: El Pollo Loco (Administrador)");
         ImprimirCentrado((LINES/2) -2, "Selecciona una opcion");
 
         //imprime las opciones del menu
